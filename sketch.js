@@ -14,6 +14,12 @@ let pictureTaken = false;
 // For captures
 let hoverText = "";
 let brightSlider;
+let redSlider;
+let greenSlider;
+let blueSlider;
+let redRemovedSlider;
+let greenRemovedSlider;
+let blueRemovedSlider;
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
@@ -54,7 +60,18 @@ function setup() {
 
   // ----- For captures  ----- //
   brightSlider = createSlider(0, 300, 120, 1);
-  brightSlider.style("width", capture.width + "px");
+  redSlider = createSlider(0, 255, 255, 1);
+  greenSlider = createSlider(0, 255, 255, 1);
+  blueSlider = createSlider(0, 255, 255, 1);
+  redRemovedSlider = createSlider(0, 255, 0, 1);
+  greenRemovedSlider = createSlider(0, 255, 0, 1);
+  blueRemovedSlider = createSlider(0, 255, 0, 1);
+
+  let sliders = [];
+  sliders.push(brightSlider, redSlider, greenSlider, blueSlider, redRemovedSlider, greenRemovedSlider, blueRemovedSlider);
+  for (let i = 0; i < sliders.length; i++) {
+    sliders[i].style("width", capture.width + "px");
+  }
 }
 
 function draw() {
@@ -86,30 +103,74 @@ function draw() {
   // Row 1
   image(inputFeed, positions[0][0].x, positions[0][0].y, setWidth, setHeight);
   hoverEffect("Webcam\nImage", positions[0][0].x, positions[0][0].y, capture.width, capture.height);
-  text(hoverText, positions[0][0].x + capture.width / 2, positions[0][0].y + capture.height / 2 - (textSize() * 1) / 2); // textSize() * <number of line breaks>
+  let midWidth = positions[0][0].x + capture.width / 2;
+  let midHeight = positions[0][0].y + capture.height / 2 - (textSize() * 1) / 2;
+  text(hoverText, midWidth, midHeight);
 
   captureEditGrey(inputFeed, positions[0][1].x, positions[0][1].y, setWidth, setHeight);
   hoverEffect("Greyscale\nand\nBrightness + 20%", positions[0][1].x, positions[0][1].y, capture.width, capture.height);
-  text(hoverText, positions[0][1].x + capture.width / 2, positions[0][1].y + capture.height / 2 - (textSize() * 2) / 2); // textSize() * <number of line breaks>
+  midWidth = positions[0][1].x + capture.width / 2;
+  midHeight = positions[0][1].y + capture.height / 2 - (textSize() * 2) / 2;
+  text(hoverText, midWidth, midHeight);
   brightSlider.position(positions[0][1].x, positions[0][1].y + capture.height + brightSlider.height);
   text("Brightness: " + brightSlider.value() + "%", brightSlider.x + brightSlider.width / 2, brightSlider.y);
 
-  // Row 2 TODO
+  // Row 2 NOTE unsure if this is correct
   captureEditR(inputFeed, positions[1][0].x, positions[1][0].y, setWidth, setHeight);
+  hoverEffect("Red Channel", positions[1][0].x, positions[1][0].y, capture.width, capture.height);
+  midWidth = positions[1][0].x + capture.width / 2;
+  midHeight = positions[1][0].y + capture.height / 2 + textSize() / 2;
+  text(hoverText, midWidth, midHeight);
+  redSlider.position(positions[1][0].x, positions[1][0].y + capture.height + redSlider.height);
+  text("Red Value: " + redSlider.value(), redSlider.x + redSlider.width / 2, redSlider.y);
+
   captureEditG(inputFeed, positions[1][1].x, positions[1][1].y, setWidth, setHeight);
+  hoverEffect("Green Channel", positions[1][1].x, positions[1][1].y, capture.width, capture.height);
+  midWidth = positions[1][1].x + capture.width / 2;
+  midHeight = positions[1][1].y + capture.height / 2 + textSize() / 2;
+  text(hoverText, midWidth, midHeight);
+  greenSlider.position(positions[1][1].x, positions[1][1].y + capture.height + greenSlider.height);
+  text("Green Value: " + greenSlider.value(), greenSlider.x + greenSlider.width / 2, greenSlider.y);
+
   captureEditB(inputFeed, positions[1][2].x, positions[1][2].y, setWidth, setHeight);
+  hoverEffect("Blue Channel", positions[1][2].x, positions[1][2].y, capture.width, capture.height);
+  midWidth = positions[1][2].x + capture.width / 2;
+  midHeight = positions[1][2].y + capture.height / 2 + textSize() / 2;
+  text(hoverText, midWidth, midHeight);
+  blueSlider.position(positions[1][2].x, positions[1][2].y + capture.height + blueSlider.height);
+  text("Blue Value: " + blueSlider.value(), blueSlider.x + blueSlider.width / 2, blueSlider.y);
 
-  // Row 3 TODO
+  // Row 3 NOTE unsure if this is correct
   captureEditSegment1(inputFeed, positions[2][0].x, positions[2][0].y, setWidth, setHeight);
-  captureEditSegment2(inputFeed, positions[2][1].x, positions[2][1].y, setWidth, setHeight);
-  captureEditSegment3(inputFeed, positions[2][2].x, positions[2][2].y, setWidth, setHeight);
+  hoverEffect("Segmented Image", positions[2][0].x, positions[2][0].y, capture.width, capture.height);
+  midWidth = positions[2][0].x + capture.width / 2;
+  midHeight = positions[2][0].y + capture.height / 2 + textSize() / 2;
+  text(hoverText, midWidth, midHeight);
+  redRemovedSlider.position(positions[2][0].x, positions[2][0].y + capture.height + redRemovedSlider.height);
+  text("Red Removed: " + redRemovedSlider.value(), redRemovedSlider.x + redRemovedSlider.width / 2, redRemovedSlider.y);
 
-  // Row 4 TODO
+  captureEditSegment2(inputFeed, positions[2][1].x, positions[2][1].y, setWidth, setHeight);
+  hoverEffect("Segmented Image", positions[2][1].x, positions[2][1].y, capture.width, capture.height);
+  midWidth = positions[2][1].x + capture.width / 2;
+  midHeight = positions[2][1].y + capture.height / 2 + textSize() / 2;
+  text(hoverText, midWidth, midHeight);
+  greenRemovedSlider.position(positions[2][1].x, positions[2][1].y + capture.height + greenRemovedSlider.height);
+  text("Green Removed: " + greenRemovedSlider.value(), greenRemovedSlider.x + greenRemovedSlider.width / 2, greenRemovedSlider.y);
+
+  captureEditSegment3(inputFeed, positions[2][2].x, positions[2][2].y, setWidth, setHeight);
+  hoverEffect("Segmented Image", positions[2][2].x, positions[2][2].y, capture.width, capture.height);
+  midWidth = positions[2][2].x + capture.width / 2;
+  midHeight = positions[2][2].y + capture.height / 2 + textSize() / 2;
+  text(hoverText, midWidth, midHeight);
+  blueRemovedSlider.position(positions[2][2].x, positions[2][2].y + capture.height + blueRemovedSlider.height);
+  text("Blue Removed: " + blueRemovedSlider.value(), blueRemovedSlider.x + blueRemovedSlider.width / 2, blueRemovedSlider.y);
+
+  // Row 4
   captureEditRepeat(inputFeed, positions[3][0].x, positions[3][0].y, setWidth, setHeight);
   captureEditColourSpace1(inputFeed, positions[3][1].x, positions[3][1].y, setWidth, setHeight);
   captureEditColourSpace2(inputFeed, positions[3][2].x, positions[3][2].y, setWidth, setHeight);
 
-  // Row 5 TODO
+  // Row 5
   captureEditFaceDetect(inputFeed, positions[4][0].x, positions[4][0].y, setWidth, setHeight);
   captureEditColourSpace1Segment(inputFeed, positions[4][1].x, positions[4][1].y, setWidth, setHeight);
   captureEditColourSpace2Segment(inputFeed, positions[4][2].x, positions[4][2].y, setWidth, setHeight);
@@ -178,8 +239,7 @@ function captureEditR(src, x, y, w, h) {
       let chanR = captureCopy.pixels[index + 0];
       let chanG = 0;
       let chanB = 0;
-      let chanA = captureCopy.pixels[index + 3];
-      captureCopy.pixels[index + 0] = chanR;
+      captureCopy.pixels[index + 0] = min(chanR, redSlider.value());
       captureCopy.pixels[index + 1] = chanG;
       captureCopy.pixels[index + 2] = chanB;
     }
@@ -198,9 +258,8 @@ function captureEditG(src, x, y, w, h) {
       let chanR = 0;
       let chanG = captureCopy.pixels[index + 1];
       let chanB = 0;
-      let chanA = captureCopy.pixels[index + 3];
       captureCopy.pixels[index + 0] = chanR;
-      captureCopy.pixels[index + 1] = chanG;
+      captureCopy.pixels[index + 1] = min(chanG, greenSlider.value());
       captureCopy.pixels[index + 2] = chanB;
     }
   }
@@ -218,10 +277,9 @@ function captureEditB(src, x, y, w, h) {
       let chanR = 0;
       let chanG = 0;
       let chanB = captureCopy.pixels[index + 2];
-      let chanA = captureCopy.pixels[index + 3];
       captureCopy.pixels[index + 0] = chanR;
       captureCopy.pixels[index + 1] = chanG;
-      captureCopy.pixels[index + 2] = chanB;
+      captureCopy.pixels[index + 2] = min(chanB, blueSlider.value());
     }
   }
   captureCopy.updatePixels();
@@ -239,8 +297,7 @@ function captureEditSegment1(src, x, y, w, h) {
       let chanR = captureCopy.pixels[index + 0];
       let chanG = captureCopy.pixels[index + 1];
       let chanB = captureCopy.pixels[index + 2];
-      let chanA = captureCopy.pixels[index + 3];
-      captureCopy.pixels[index + 0] = chanR;
+      captureCopy.pixels[index + 0] = chanR - redRemovedSlider.value();
       captureCopy.pixels[index + 1] = chanG;
       captureCopy.pixels[index + 2] = chanB;
     }
@@ -259,9 +316,8 @@ function captureEditSegment2(src, x, y, w, h) {
       let chanR = captureCopy.pixels[index + 0];
       let chanG = captureCopy.pixels[index + 1];
       let chanB = captureCopy.pixels[index + 2];
-      let chanA = captureCopy.pixels[index + 3];
       captureCopy.pixels[index + 0] = chanR;
-      captureCopy.pixels[index + 1] = chanG;
+      captureCopy.pixels[index + 1] = chanG - greenRemovedSlider.value();
       captureCopy.pixels[index + 2] = chanB;
     }
   }
@@ -279,10 +335,9 @@ function captureEditSegment3(src, x, y, w, h) {
       let chanR = captureCopy.pixels[index + 0];
       let chanG = captureCopy.pixels[index + 1];
       let chanB = captureCopy.pixels[index + 2];
-      let chanA = captureCopy.pixels[index + 3];
       captureCopy.pixels[index + 0] = chanR;
       captureCopy.pixels[index + 1] = chanG;
-      captureCopy.pixels[index + 2] = chanB;
+      captureCopy.pixels[index + 2] = chanB - blueRemovedSlider.value();
     }
   }
   captureCopy.updatePixels();
