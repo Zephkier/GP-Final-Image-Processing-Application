@@ -104,11 +104,11 @@ function draw() {
   image(inputFeed, positions[0][0].x, positions[0][0].y, setWidth, setHeight);
   hoverEffect("Webcam\nImage", positions[0][0].x, positions[0][0].y, capture.width, capture.height);
   let midWidth = positions[0][0].x + capture.width / 2;
-  let midHeight = positions[0][0].y + capture.height / 2 - (textSize() * 1) / 2;
+  let midHeight = positions[0][0].y + capture.height / 2 - (textSize() * 1) / 2; // NOTE: textSize() * <number of line break(s)>
   text(hoverText, midWidth, midHeight);
 
   captureEditGrey(inputFeed, positions[0][1].x, positions[0][1].y, setWidth, setHeight);
-  hoverEffect("Greyscale\nand\nBrightness + 20%", positions[0][1].x, positions[0][1].y, capture.width, capture.height);
+  hoverEffect("Greyscale\nand\nBrightness", positions[0][1].x, positions[0][1].y, capture.width, capture.height);
   midWidth = positions[0][1].x + capture.width / 2;
   midHeight = positions[0][1].y + capture.height / 2 - (textSize() * 2) / 2;
   text(hoverText, midWidth, midHeight);
@@ -119,7 +119,7 @@ function draw() {
   captureEditR(inputFeed, positions[1][0].x, positions[1][0].y, setWidth, setHeight);
   hoverEffect("Red Channel", positions[1][0].x, positions[1][0].y, capture.width, capture.height);
   midWidth = positions[1][0].x + capture.width / 2;
-  midHeight = positions[1][0].y + capture.height / 2 + textSize() / 2;
+  midHeight = positions[1][0].y + capture.height / 2 + textSize() / 2; //NOTE: no line breaks = textSize() / 2
   text(hoverText, midWidth, midHeight);
   redSlider.position(positions[1][0].x, positions[1][0].y + capture.height + redSlider.height);
   text("Red Value: " + redSlider.value(), redSlider.x + redSlider.width / 2, redSlider.y);
@@ -165,15 +165,43 @@ function draw() {
   blueRemovedSlider.position(positions[2][2].x, positions[2][2].y + capture.height + blueRemovedSlider.height);
   text("Blue Removed: " + blueRemovedSlider.value(), blueRemovedSlider.x + blueRemovedSlider.width / 2, blueRemovedSlider.y);
 
-  // Row 4
+  // Row 4 TODO
   captureEditRepeat(inputFeed, positions[3][0].x, positions[3][0].y, setWidth, setHeight);
-  captureEditColourSpace1(inputFeed, positions[3][1].x, positions[3][1].y, setWidth, setHeight);
-  captureEditColourSpace2(inputFeed, positions[3][2].x, positions[3][2].y, setWidth, setHeight);
+  hoverEffect("Webcam\nImage\n\n(Repeat)", positions[3][0].x, positions[3][0].y, capture.width, capture.height);
+  midWidth = positions[3][0].x + capture.width / 2;
+  midHeight = positions[3][0].y + capture.height / 2 - (textSize() * 3) / 2;
+  text(hoverText, midWidth, midHeight);
 
-  // Row 5
+  captureEditColourSpace1(inputFeed, positions[3][1].x, positions[3][1].y, setWidth, setHeight);
+  hoverEffect("Colour Space\n(Conversion)\n1", positions[3][1].x, positions[3][1].y, capture.width, capture.height);
+  midWidth = positions[3][1].x + capture.width / 2;
+  midHeight = positions[3][1].y + capture.height / 2 - (textSize() * 2) / 2;
+  text(hoverText, midWidth, midHeight);
+
+  captureEditColourSpace2(inputFeed, positions[3][2].x, positions[3][2].y, setWidth, setHeight);
+  hoverEffect("Colour Space\n(Conversion)\n2", positions[3][2].x, positions[3][2].y, capture.width, capture.height);
+  midWidth = positions[3][2].x + capture.width / 2;
+  midHeight = positions[3][2].y + capture.height / 2 - (textSize() * 2) / 2;
+  text(hoverText, midWidth, midHeight);
+
+  // Row 5 TODO
   captureEditFaceDetect(inputFeed, positions[4][0].x, positions[4][0].y, setWidth, setHeight);
+  hoverEffect("Face Detection\nand\nReplaced\nFace Images", positions[4][0].x, positions[4][0].y, capture.width, capture.height);
+  midWidth = positions[4][0].x + capture.width / 2;
+  midHeight = positions[4][0].y + capture.height / 2 - (textSize() * 3) / 2;
+  text(hoverText, midWidth, midHeight);
+
   captureEditColourSpace1Segment(inputFeed, positions[4][1].x, positions[4][1].y, setWidth, setHeight);
+  hoverEffect("Segmented Image\nfrom\nColour Space\n(Conversion)\n1", positions[4][1].x, positions[4][1].y, capture.width, capture.height);
+  midWidth = positions[4][1].x + capture.width / 2;
+  midHeight = positions[4][1].y + capture.height / 2 - (textSize() * 4) / 2;
+  text(hoverText, midWidth, midHeight);
+
   captureEditColourSpace2Segment(inputFeed, positions[4][2].x, positions[4][2].y, setWidth, setHeight);
+  hoverEffect("Segmented Image\nfrom\nColour Space\n(Conversion)\n2", positions[4][2].x, positions[4][2].y, capture.width, capture.height);
+  midWidth = positions[4][2].x + capture.width / 2;
+  midHeight = positions[4][2].y + capture.height / 2 - (textSize() * 4) / 2;
+  text(hoverText, midWidth, midHeight);
 }
 
 function windowResized() {
