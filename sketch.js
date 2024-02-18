@@ -5,14 +5,21 @@ let marginWidth = 20;
 let marginHeight = 60;
 let positions = []; // positions to end up like this: [ [{x,y}, {x,y}, {x,y}], repeat 4 more times ]
 
+// Picture and video functionality
 let inputFeed;
 let pictureButton;
 let videoButton;
+let pictureTaken = false;
+
+// For captures
+let hoverText = "";
+let brightSlider;
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
-  rectMode(CENTER);
+  textAlign(CENTER);
   angleMode(DEGREES);
+  fill(255);
 
   pixelDensity(1);
   capture = createCapture(VIDEO);
@@ -35,20 +42,25 @@ function setup() {
     inputFeed = picture;
     pictureButton.html("Take another!");
     videoButton.show();
+    pictureTaken = true;
   });
 
   videoButton.mousePressed(function () {
     inputFeed = capture;
     pictureButton.html("Take picture");
     videoButton.hide();
+    pictureTaken = false;
   });
+
+  // ----- For captures  ----- //
+  brightSlider = createSlider(0, 300, 120, 1);
+  brightSlider.style("width", capture.width + "px");
 }
 
 function draw() {
   background(20);
 
-  // ----- Placed in draw() in case of window resizing  ----- //
-  // Update positions due to using 'width' and 'height'
+  // ----- Update positions in case of window resizing  ----- //
   let rowCount = 5;
   let colCount = 3;
   for (let i = 0; i < rowCount; i++) {
@@ -65,16 +77,24 @@ function draw() {
     }
   }
 
-  // Update button positions
-  pictureButton.position(positions[0][2].x, positions[0][2].y);
-  videoButton.position(positions[0][2].x, positions[0][2].y + pictureButton.height + marginHeight / 4);
+  // Shift pictureButton leftward a tiny bit when its text changes
+  if (!pictureTaken) pictureButton.position(positions[0][2].x + capture.width / 2 - pictureButton.width / 2, positions[0][2].y);
+  else pictureButton.position(positions[0][2].x + capture.width / 2 - pictureButton.width / 2 - 4, positions[0][2].y);
+  videoButton.position(positions[0][2].x + capture.width / 2 - videoButton.width / 2, positions[0][2].y + pictureButton.height + marginHeight / 4);
 
   // ----- Capture grid ----- //
-  // Row 1 DONE
+  // Row 1
   image(inputFeed, positions[0][0].x, positions[0][0].y, setWidth, setHeight);
-  captureEditGrey(inputFeed, positions[0][1].x, positions[0][1].y, setWidth, setHeight);
+  hoverEffect("Webcam\nImage", positions[0][0].x, positions[0][0].y, capture.width, capture.height);
+  text(hoverText, positions[0][0].x + capture.width / 2, positions[0][0].y + capture.height / 2 - (textSize() * 1) / 2); // textSize() * <number of line breaks>
 
-  // Row 2 DONE
+  captureEditGrey(inputFeed, positions[0][1].x, positions[0][1].y, setWidth, setHeight);
+  hoverEffect("Greyscale\nand\nBrightness + 20%", positions[0][1].x, positions[0][1].y, capture.width, capture.height);
+  text(hoverText, positions[0][1].x + capture.width / 2, positions[0][1].y + capture.height / 2 - (textSize() * 2) / 2); // textSize() * <number of line breaks>
+  brightSlider.position(positions[0][1].x, positions[0][1].y + capture.height + brightSlider.height);
+  text("Brightness: " + brightSlider.value() + "%", brightSlider.x + brightSlider.width / 2, brightSlider.y);
+
+  // Row 2 TODO
   captureEditR(inputFeed, positions[1][0].x, positions[1][0].y, setWidth, setHeight);
   captureEditG(inputFeed, positions[1][1].x, positions[1][1].y, setWidth, setHeight);
   captureEditB(inputFeed, positions[1][2].x, positions[1][2].y, setWidth, setHeight);
@@ -85,7 +105,7 @@ function draw() {
   captureEditSegment3(inputFeed, positions[2][2].x, positions[2][2].y, setWidth, setHeight);
 
   // Row 4 TODO
-  captureEditRepeat(inputFeed, positions[3][0].x, positions[3][0].y, setWidth, setHeight); // DONE ?
+  captureEditRepeat(inputFeed, positions[3][0].x, positions[3][0].y, setWidth, setHeight);
   captureEditColourSpace1(inputFeed, positions[3][1].x, positions[3][1].y, setWidth, setHeight);
   captureEditColourSpace2(inputFeed, positions[3][2].x, positions[3][2].y, setWidth, setHeight);
 
@@ -97,6 +117,23 @@ function draw() {
 
 function windowResized() {
   resizeCanvas(windowWidth, windowHeight);
+}
+
+function hoverEffect(text, x, y, w, h) {
+  if (
+    //format
+    mouseX > x &&
+    mouseX < x + w &&
+    mouseY > y &&
+    mouseY < y + h
+  ) {
+    fill(0, 200);
+    rect(x, y, w, h);
+    fill(255);
+    hoverText = text;
+  } else {
+    hoverText = "";
+  }
 }
 
 /*
@@ -118,12 +155,12 @@ function captureEditGrey(src, x, y, w, h) {
       let chanG = captureCopy.pixels[index + 1];
       let chanB = captureCopy.pixels[index + 2];
       let grey = (chanR + chanG + chanB) / 3;
-      // Value cannot go over 255
-      let percentage = 100 / 100;
-      let bright = min(255, grey * percentage);
-      captureCopy.pixels[index + 0] = bright;
-      captureCopy.pixels[index + 1] = bright;
-      captureCopy.pixels[index + 2] = bright;
+      let bright = brightSlider.value() / 100;
+      // "Prevent pixel intensity from going beyond 255"
+      let output = min(grey * bright, 255);
+      captureCopy.pixels[index + 0] = output;
+      captureCopy.pixels[index + 1] = output;
+      captureCopy.pixels[index + 2] = output;
     }
   }
   captureCopy.updatePixels();
@@ -141,6 +178,7 @@ function captureEditR(src, x, y, w, h) {
       let chanR = captureCopy.pixels[index + 0];
       let chanG = 0;
       let chanB = 0;
+      let chanA = captureCopy.pixels[index + 3];
       captureCopy.pixels[index + 0] = chanR;
       captureCopy.pixels[index + 1] = chanG;
       captureCopy.pixels[index + 2] = chanB;
@@ -160,6 +198,7 @@ function captureEditG(src, x, y, w, h) {
       let chanR = 0;
       let chanG = captureCopy.pixels[index + 1];
       let chanB = 0;
+      let chanA = captureCopy.pixels[index + 3];
       captureCopy.pixels[index + 0] = chanR;
       captureCopy.pixels[index + 1] = chanG;
       captureCopy.pixels[index + 2] = chanB;
@@ -179,6 +218,7 @@ function captureEditB(src, x, y, w, h) {
       let chanR = 0;
       let chanG = 0;
       let chanB = captureCopy.pixels[index + 2];
+      let chanA = captureCopy.pixels[index + 3];
       captureCopy.pixels[index + 0] = chanR;
       captureCopy.pixels[index + 1] = chanG;
       captureCopy.pixels[index + 2] = chanB;
@@ -199,6 +239,7 @@ function captureEditSegment1(src, x, y, w, h) {
       let chanR = captureCopy.pixels[index + 0];
       let chanG = captureCopy.pixels[index + 1];
       let chanB = captureCopy.pixels[index + 2];
+      let chanA = captureCopy.pixels[index + 3];
       captureCopy.pixels[index + 0] = chanR;
       captureCopy.pixels[index + 1] = chanG;
       captureCopy.pixels[index + 2] = chanB;
@@ -218,6 +259,7 @@ function captureEditSegment2(src, x, y, w, h) {
       let chanR = captureCopy.pixels[index + 0];
       let chanG = captureCopy.pixels[index + 1];
       let chanB = captureCopy.pixels[index + 2];
+      let chanA = captureCopy.pixels[index + 3];
       captureCopy.pixels[index + 0] = chanR;
       captureCopy.pixels[index + 1] = chanG;
       captureCopy.pixels[index + 2] = chanB;
@@ -237,6 +279,7 @@ function captureEditSegment3(src, x, y, w, h) {
       let chanR = captureCopy.pixels[index + 0];
       let chanG = captureCopy.pixels[index + 1];
       let chanB = captureCopy.pixels[index + 2];
+      let chanA = captureCopy.pixels[index + 3];
       captureCopy.pixels[index + 0] = chanR;
       captureCopy.pixels[index + 1] = chanG;
       captureCopy.pixels[index + 2] = chanB;
@@ -263,6 +306,7 @@ function captureEditColourSpace1(src, x, y, w, h) {
       let chanR = captureCopy.pixels[index + 0];
       let chanG = captureCopy.pixels[index + 1];
       let chanB = captureCopy.pixels[index + 2];
+      let chanA = captureCopy.pixels[index + 3];
       captureCopy.pixels[index + 0] = chanR;
       captureCopy.pixels[index + 1] = chanG;
       captureCopy.pixels[index + 2] = chanB;
@@ -282,6 +326,7 @@ function captureEditColourSpace2(src, x, y, w, h) {
       let chanR = captureCopy.pixels[index + 0];
       let chanG = captureCopy.pixels[index + 1];
       let chanB = captureCopy.pixels[index + 2];
+      let chanA = captureCopy.pixels[index + 3];
       captureCopy.pixels[index + 0] = chanR;
       captureCopy.pixels[index + 1] = chanG;
       captureCopy.pixels[index + 2] = chanB;
@@ -302,6 +347,7 @@ function captureEditFaceDetect(src, x, y, w, h) {
       let chanR = captureCopy.pixels[index + 0];
       let chanG = captureCopy.pixels[index + 1];
       let chanB = captureCopy.pixels[index + 2];
+      let chanA = captureCopy.pixels[index + 3];
       captureCopy.pixels[index + 0] = chanR;
       captureCopy.pixels[index + 1] = chanG;
       captureCopy.pixels[index + 2] = chanB;
@@ -321,6 +367,7 @@ function captureEditColourSpace1Segment(src, x, y, w, h) {
       let chanR = captureCopy.pixels[index + 0];
       let chanG = captureCopy.pixels[index + 1];
       let chanB = captureCopy.pixels[index + 2];
+      let chanA = captureCopy.pixels[index + 3];
       captureCopy.pixels[index + 0] = chanR;
       captureCopy.pixels[index + 1] = chanG;
       captureCopy.pixels[index + 2] = chanB;
@@ -340,6 +387,7 @@ function captureEditColourSpace2Segment(src, x, y, w, h) {
       let chanR = captureCopy.pixels[index + 0];
       let chanG = captureCopy.pixels[index + 1];
       let chanB = captureCopy.pixels[index + 2];
+      let chanA = captureCopy.pixels[index + 3];
       captureCopy.pixels[index + 0] = chanR;
       captureCopy.pixels[index + 1] = chanG;
       captureCopy.pixels[index + 2] = chanB;
