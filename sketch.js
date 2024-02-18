@@ -1,7 +1,13 @@
 let capture;
 let setWidth = 640 / 4; // minimum = 160
 let setHeight = 480 / 4; // minimum = 120
-let margin = 20;
+let marginWidth = 20;
+let marginHeight = 60;
+let positions = []; // positions to end up like this: [ [{x,y}, {x,y}, {x,y}], repeat 4 more times ]
+
+let inputFeed;
+let pictureButton;
+let videoButton;
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
@@ -12,46 +18,81 @@ function setup() {
   capture = createCapture(VIDEO);
   capture.size(setWidth, setHeight);
   capture.hide();
+
+  // ----- Picture and video functionality  ----- //
+  // Set inputFeed upon startup
+  inputFeed = capture;
+
+  // Button creation
+  pictureButton = createButton("Take picture");
+  videoButton = createButton("Resume video");
+  videoButton.hide();
+
+  // Button function
+  pictureButton.mousePressed(function () {
+    let picture = createImage(capture.width, capture.height);
+    picture.copy(capture, 0, 0, capture.width, capture.height, 0, 0, capture.width, capture.height);
+    inputFeed = picture;
+    pictureButton.html("Take another!");
+    videoButton.show();
+  });
+
+  videoButton.mousePressed(function () {
+    inputFeed = capture;
+    pictureButton.html("Take picture");
+    videoButton.hide();
+  });
 }
 
 function draw() {
   background(20);
 
-  // reference: positions = [ [{x,y}, {x,y}, {x,y}], repeat 4 more times ]
-  let positions = [];
-  for (let i = 0; i < 5; i++) {
+  // ----- Placed in draw() in case of window resizing  ----- //
+  // Update positions due to using 'width' and 'height'
+  let rowCount = 5;
+  let colCount = 3;
+  for (let i = 0; i < rowCount; i++) {
     positions[i] = [];
-    for (let j = 0; j < 3; j++) {
+    for (let j = 0; j < colCount; j++) {
+      let totalWidth = colCount * (setWidth + marginWidth) - marginWidth;
+      let totalHeight = rowCount * (setHeight + marginHeight) - marginHeight;
+      let startX = (width - totalWidth) / 2;
+      let startY = (height - totalHeight) / 2;
       positions[i][j] = {
-        x: margin + j * (setWidth + margin),
-        y: margin + i * (setHeight + margin),
+        x: startX + j * (setWidth + marginWidth),
+        y: startY + i * (setHeight + marginHeight),
       };
     }
   }
 
+  // Update button positions
+  pictureButton.position(positions[0][2].x, positions[0][2].y);
+  videoButton.position(positions[0][2].x, positions[0][2].y + pictureButton.height + marginHeight / 4);
+
+  // ----- Capture grid ----- //
   // Row 1 DONE
-  image(capture, positions[0][0].x, positions[0][0].y, setWidth, setHeight);
-  captureEditGrey(capture, positions[0][1].x, positions[0][1].y, setWidth, setHeight);
+  image(inputFeed, positions[0][0].x, positions[0][0].y, setWidth, setHeight);
+  captureEditGrey(inputFeed, positions[0][1].x, positions[0][1].y, setWidth, setHeight);
 
   // Row 2 DONE
-  captureEditR(capture, positions[1][0].x, positions[1][0].y, setWidth, setHeight);
-  captureEditG(capture, positions[1][1].x, positions[1][1].y, setWidth, setHeight);
-  captureEditB(capture, positions[1][2].x, positions[1][2].y, setWidth, setHeight);
+  captureEditR(inputFeed, positions[1][0].x, positions[1][0].y, setWidth, setHeight);
+  captureEditG(inputFeed, positions[1][1].x, positions[1][1].y, setWidth, setHeight);
+  captureEditB(inputFeed, positions[1][2].x, positions[1][2].y, setWidth, setHeight);
 
   // Row 3 TODO
-  captureEditSegment1(capture, positions[2][0].x, positions[2][0].y, setWidth, setHeight);
-  captureEditSegment2(capture, positions[2][1].x, positions[2][1].y, setWidth, setHeight);
-  captureEditSegment3(capture, positions[2][2].x, positions[2][2].y, setWidth, setHeight);
+  captureEditSegment1(inputFeed, positions[2][0].x, positions[2][0].y, setWidth, setHeight);
+  captureEditSegment2(inputFeed, positions[2][1].x, positions[2][1].y, setWidth, setHeight);
+  captureEditSegment3(inputFeed, positions[2][2].x, positions[2][2].y, setWidth, setHeight);
 
   // Row 4 TODO
-  captureEditRepeat(capture, positions[3][0].x, positions[3][0].y, setWidth, setHeight); // DONE ?
-  captureEditColourSpace1(capture, positions[3][1].x, positions[3][1].y, setWidth, setHeight);
-  captureEditColourSpace2(capture, positions[3][2].x, positions[3][2].y, setWidth, setHeight);
+  captureEditRepeat(inputFeed, positions[3][0].x, positions[3][0].y, setWidth, setHeight); // DONE ?
+  captureEditColourSpace1(inputFeed, positions[3][1].x, positions[3][1].y, setWidth, setHeight);
+  captureEditColourSpace2(inputFeed, positions[3][2].x, positions[3][2].y, setWidth, setHeight);
 
   // Row 5 TODO
-  captureEditFaceDetect(capture, positions[4][0].x, positions[4][0].y, setWidth, setHeight);
-  captureEditColourSpace1Segment(capture, positions[4][1].x, positions[4][1].y, setWidth, setHeight);
-  captureEditColourSpace2Segment(capture, positions[4][2].x, positions[4][2].y, setWidth, setHeight);
+  captureEditFaceDetect(inputFeed, positions[4][0].x, positions[4][0].y, setWidth, setHeight);
+  captureEditColourSpace1Segment(inputFeed, positions[4][1].x, positions[4][1].y, setWidth, setHeight);
+  captureEditColourSpace2Segment(inputFeed, positions[4][2].x, positions[4][2].y, setWidth, setHeight);
 }
 
 function windowResized() {
@@ -78,7 +119,8 @@ function captureEditGrey(src, x, y, w, h) {
       let chanB = captureCopy.pixels[index + 2];
       let grey = (chanR + chanG + chanB) / 3;
       // Value cannot go over 255
-      let bright = min(255, grey * 1.2);
+      let percentage = 100 / 100;
+      let bright = min(255, grey * percentage);
       captureCopy.pixels[index + 0] = bright;
       captureCopy.pixels[index + 1] = bright;
       captureCopy.pixels[index + 2] = bright;
