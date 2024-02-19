@@ -165,7 +165,7 @@ function draw() {
   blueRemovedSlider.position(positions[2][2].x, positions[2][2].y + capture.height + blueRemovedSlider.height);
   text("Blue Removed: " + blueRemovedSlider.value(), blueRemovedSlider.x + blueRemovedSlider.width / 2, blueRemovedSlider.y);
 
-  // Row 4 TODO
+  // Row 4 NOTE unsure if this is correct
   captureEditRepeat(inputFeed, positions[3][0].x, positions[3][0].y, setWidth, setHeight);
   hoverEffect("Webcam\nImage\n\n(Repeat)", positions[3][0].x, positions[3][0].y, capture.width, capture.height);
   midWidth = positions[3][0].x + capture.width / 2;
@@ -173,15 +173,15 @@ function draw() {
   text(hoverText, midWidth, midHeight);
 
   captureEditColourSpace1(inputFeed, positions[3][1].x, positions[3][1].y, setWidth, setHeight);
-  hoverEffect("Colour Space\n(Conversion)\n1", positions[3][1].x, positions[3][1].y, capture.width, capture.height);
+  hoverEffect("Colour Space\n(Conversion)\n1\n\nRGB to CMY", positions[3][1].x, positions[3][1].y, capture.width, capture.height);
   midWidth = positions[3][1].x + capture.width / 2;
-  midHeight = positions[3][1].y + capture.height / 2 - (textSize() * 2) / 2;
+  midHeight = positions[3][1].y + capture.height / 2 - (textSize() * 4) / 2;
   text(hoverText, midWidth, midHeight);
 
   captureEditColourSpace2(inputFeed, positions[3][2].x, positions[3][2].y, setWidth, setHeight);
-  hoverEffect("Colour Space\n(Conversion)\n2", positions[3][2].x, positions[3][2].y, capture.width, capture.height);
+  hoverEffect("Colour Space\n(Conversion)\n2\n\nRGB to CMY to CMYK", positions[3][2].x, positions[3][2].y, capture.width, capture.height);
   midWidth = positions[3][2].x + capture.width / 2;
-  midHeight = positions[3][2].y + capture.height / 2 - (textSize() * 2) / 2;
+  midHeight = positions[3][2].y + capture.height / 2 - (textSize() * 4) / 2;
   text(hoverText, midWidth, midHeight);
 
   // Row 5 TODO
@@ -389,10 +389,14 @@ function captureEditColourSpace1(src, x, y, w, h) {
       let chanR = captureCopy.pixels[index + 0];
       let chanG = captureCopy.pixels[index + 1];
       let chanB = captureCopy.pixels[index + 2];
-      let chanA = captureCopy.pixels[index + 3];
-      captureCopy.pixels[index + 0] = chanR;
-      captureCopy.pixels[index + 1] = chanG;
-      captureCopy.pixels[index + 2] = chanB;
+      // See https://users.ece.utexas.edu/~bevans/talks/hp-dsp-seminar/07_C6xImage2/tsld011.htm
+      // Convert from RGB to CMY
+      let myCyan = 255 - chanR;
+      let myMagenta = 255 - chanG;
+      let myYellow = 255 - chanB;
+      captureCopy.pixels[index + 0] = myCyan;
+      captureCopy.pixels[index + 1] = myMagenta;
+      captureCopy.pixels[index + 2] = myYellow;
     }
   }
   captureCopy.updatePixels();
@@ -409,10 +413,19 @@ function captureEditColourSpace2(src, x, y, w, h) {
       let chanR = captureCopy.pixels[index + 0];
       let chanG = captureCopy.pixels[index + 1];
       let chanB = captureCopy.pixels[index + 2];
-      let chanA = captureCopy.pixels[index + 3];
-      captureCopy.pixels[index + 0] = chanR;
-      captureCopy.pixels[index + 1] = chanG;
-      captureCopy.pixels[index + 2] = chanB;
+      // See https://users.ece.utexas.edu/~bevans/talks/hp-dsp-seminar/07_C6xImage2/tsld011.htm
+      // Convert from RGB to CMY
+      let myCyan = 255 - chanR;
+      let myMagenta = 255 - chanG;
+      let myYellow = 255 - chanB;
+      // Convert from CMY to CMYK
+      let myKey = min(myCyan, myMagenta, myYellow);
+      myCyan = (255 * (myCyan - myKey)) / (255 - myKey);
+      myMagenta = (255 * (myMagenta - myKey)) / (255 - myKey);
+      myYellow = (255 * (myYellow - myKey)) / (255 - myKey);
+      captureCopy.pixels[index + 0] = myCyan;
+      captureCopy.pixels[index + 1] = myMagenta;
+      captureCopy.pixels[index + 2] = myYellow;
     }
   }
   captureCopy.updatePixels();
