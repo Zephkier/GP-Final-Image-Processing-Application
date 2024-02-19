@@ -26,17 +26,23 @@ let hueSlider;
 let satSlider;
 let valSlider;
 
+// For face detection
+let detector;
+
 function setup() {
   createCanvas(windowWidth, windowHeight);
-  textAlign(CENTER); // Ensure sliderAndTextAlignLeft() resets to this
-  fill(255); // Ensure hoverEffectAndText() resets to this
+
+  // Setup defaults
+  textAlign(CENTER);
+  fill(255);
+  noStroke();
 
   pixelDensity(1);
   capture = createCapture(VIDEO);
   capture.size(setWidth, setHeight);
   capture.hide();
 
-  // ----- Picture and video functionality  ----- //
+  // ----- Picture and video functionality ----- //
   // Set inputFeed upon startup
   inputFeed = capture;
 
@@ -62,7 +68,6 @@ function setup() {
     pictureTaken = false;
   });
 
-  // ----- For captures  ----- //
   brightSlider = createSlider(0, 300, 120, 1);
   redSlider = createSlider(0, 255, 255, 1);
   greenSlider = createSlider(0, 255, 255, 1);
@@ -82,12 +87,17 @@ function setup() {
   for (let i = 0; i < sliders.length; i++) {
     sliders[i].style("width", capture.width + "px"); // Set slider's width to be capture's width by default
   }
+
+  // ----- For face detection ----- //
+  let scaleFactor = 1.2;
+  let classifier = objectdetect.frontalface;
+  detector = new objectdetect.detector(setWidth, setHeight, scaleFactor, classifier);
 }
 
 function draw() {
   background(20);
 
-  // ----- Update positions in case of window resizing  ----- //
+  // ----- Update positions in case of window resizing ----- //
   let rowCount = 5;
   let colCount = 3;
   for (let i = 0; i < rowCount; i++) {
@@ -232,7 +242,7 @@ function sliderAndTextAlignLeft(incomingSlider, sliderWidth, inputFeedX, inputFe
     inputFeedX,
     inputFeedY + inputFeed.height + incomingSlider.height
   );
-  textAlign(CENTER); // reset to default
+  textAlign(CENTER); // Reset to default
 
   // Slider (based on inputFeed's dimensions)
   incomingSlider.position(
@@ -511,23 +521,32 @@ function captureEditColourSpace2(src, x, y, w, h) {
 // Row 5
 // TEST
 function captureEditFaceDetect(src, x, y, w, h) {
+  // Display captureCopy
   let captureCopy = createImage(setWidth, setHeight);
   captureCopy.copy(src, 0, 0, setWidth, setHeight, 0, 0, setWidth, setHeight);
-  captureCopy.loadPixels();
-  for (let x = 0; x < captureCopy.width; x++) {
-    for (let y = 0; y < captureCopy.height; y++) {
-      let index = (captureCopy.width * y + x) * 4;
-      let chanR = captureCopy.pixels[index + 0];
-      let chanG = captureCopy.pixels[index + 1];
-      let chanB = captureCopy.pixels[index + 2];
-      let chanA = captureCopy.pixels[index + 3];
-      captureCopy.pixels[index + 0] = chanR;
-      captureCopy.pixels[index + 1] = chanG;
-      captureCopy.pixels[index + 2] = chanB;
+  image(captureCopy, x, y, w, h);
+
+  // Setup drawing tools
+  noFill();
+  strokeWeight(3);
+  stroke(255);
+
+  // push-pop to correct capture position
+  push();
+  translate(x, y);
+  // Detect face
+  let faces = detector.detect(captureCopy.canvas);
+  for (let i = 0; i < faces.length; i++) {
+    let face = faces[i];
+    if (face[4] > 4) {
+      rect(face[0], face[1], face[2], face[3]);
     }
   }
-  captureCopy.updatePixels();
-  image(captureCopy, x, y, w, h);
+  pop();
+
+  // Reset to default
+  fill(255);
+  noStroke();
 }
 
 // Copy-pasted from captureEditColourSpace1() above
