@@ -29,6 +29,18 @@ let valSlider;
 // For face detection
 let detector;
 
+let detectDefaultButton;
+let detectGreyButton;
+let detectBlurButton;
+let detectConvertButton;
+let detectPixelButton;
+
+let detectDefaultEffect = true;
+let detectGreyEffect = false;
+let detectBlurEffect = false;
+let detectConvertEffect = false;
+let detectPixelEffect = false;
+
 function setup() {
   createCanvas(windowWidth, windowHeight);
 
@@ -519,34 +531,55 @@ function captureEditColourSpace2(src, x, y, w, h) {
 }
 
 // Row 5
-// TEST
 function captureEditFaceDetect(src, x, y, w, h) {
   // Display captureCopy
   let captureCopy = createImage(setWidth, setHeight);
   captureCopy.copy(src, 0, 0, setWidth, setHeight, 0, 0, setWidth, setHeight);
   image(captureCopy, x, y, w, h);
+  captureCopy.loadPixels();
 
-  // Setup drawing tools
-  noFill();
-  strokeWeight(3);
-  stroke(255);
-
-  // push-pop to correct capture position
-  push();
-  translate(x, y);
   // Detect face
   let faces = detector.detect(captureCopy.canvas);
   for (let i = 0; i < faces.length; i++) {
     let face = faces[i];
     if (face[4] > 4) {
-      rect(face[0], face[1], face[2], face[3]);
+      if (detectDefaultEffect) {
+        push();
+        translate(x, y);
+        // Setup
+        noFill();
+        stroke(255);
+        strokeWeight(2);
+        // Draw box
+        rect(face[0], face[1], face[2], face[3]);
+        pop();
+        // Reset to default
+        fill(255);
+        noStroke();
+      } else {
+        push();
+        translate(x, y);
+        faceDetectEdit(captureCopy, int(face[0]), int(face[1]), int(face[2]), int(face[3]));
+        pop();
+        captureCopy.updatePixels();
+        image(captureCopy, x, y, w, h);
+      }
     }
   }
-  pop();
+}
 
-  // Reset to default
-  fill(255);
-  noStroke();
+function faceDetectEdit(src, faceX, faceY, faceWidth, faceHeight) {
+  for (var x = faceX; x < faceX + faceWidth; x++) {
+    for (var y = faceY; y < faceY + faceHeight; y++) {
+      var index = (src.width * y + x) * 4;
+      var chanR = src.pixels[index + 0];
+      var chanG = src.pixels[index + 1];
+      var chanB = src.pixels[index + 2];
+      src.pixels[index + 0] = map(chanR, 0, 255, 255, 0);
+      src.pixels[index + 1] = map(chanG, 0, 255, 255, 0);
+      src.pixels[index + 2] = map(chanB, 0, 255, 255, 0);
+    }
+  }
 }
 
 // Copy-pasted from captureEditColourSpace1() above
