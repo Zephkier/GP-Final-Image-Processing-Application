@@ -104,7 +104,7 @@ function draw() {
   hoverEffectAndText(positions[0][0].x, positions[0][0].y, capture.width, capture.height, "Webcam\nImage", 1);
 
   captureEditGrey(inputFeed, positions[0][1].x, positions[0][1].y, setWidth, setHeight);
-  hoverEffectAndText(positions[0][1].x, positions[0][1].y, capture.width, capture.height, "Greyscale\nand\nBrightness + " + brightSlider.value() + "%", 2);
+  hoverEffectAndText(positions[0][1].x, positions[0][1].y, capture.width, capture.height, "Greyscale\nand\nBrightness at " + brightSlider.value() + "%", 2);
   sliderAndText(brightSlider, positions[0][1].x, positions[0][1].y, "Brightness", "%");
 
   // Row 2 NOTE unsure if this is correct
@@ -133,7 +133,7 @@ function draw() {
   hoverEffectAndText(positions[2][2].x, positions[2][2].y, capture.width, capture.height, "Segmented Image", 0);
   sliderAndText(blueRemovedSlider, positions[2][2].x, positions[2][2].y, "Blue Removed");
 
-  // Row 4 NOTE unsure if this is correct
+  // Row 4 TODO
   captureEditRepeat(inputFeed, positions[3][0].x, positions[3][0].y, setWidth, setHeight);
   hoverEffectAndText(positions[3][0].x, positions[3][0].y, capture.width, capture.height, "Webcam\nImage\n\n(Repeat)", 3);
 
@@ -141,7 +141,7 @@ function draw() {
   hoverEffectAndText(positions[3][1].x, positions[3][1].y, capture.width, capture.height, "Colour Space\n(Conversion)\n1\n\nRGB to CMY", 4);
 
   captureEditColourSpace2(inputFeed, positions[3][2].x, positions[3][2].y, setWidth, setHeight);
-  hoverEffectAndText(positions[3][2].x, positions[3][2].y, capture.width, capture.height, "Colour Space\n(Conversion)\n2\n\nRGB to CMY to CMYK", 4);
+  hoverEffectAndText(positions[3][2].x, positions[3][2].y, capture.width, capture.height, "Colour Space\n(Conversion)\n2\n\nRGB to HSV", 4);
 
   // Row 5 TODO
   captureEditFaceDetect(inputFeed, positions[4][0].x, positions[4][0].y, setWidth, setHeight);
@@ -365,20 +365,32 @@ function captureEditColourSpace1(src, x, y, w, h) {
       let chanR = captureCopy.pixels[index + 0];
       let chanG = captureCopy.pixels[index + 1];
       let chanB = captureCopy.pixels[index + 2];
-      // See https://users.ece.utexas.edu/~bevans/talks/hp-dsp-seminar/07_C6xImage2/tsld011.htm
-      // Convert from RGB to CMY
-      let myCyan = 255 - chanR;
-      let myMagenta = 255 - chanG;
-      let myYellow = 255 - chanB;
-      captureCopy.pixels[index + 0] = myCyan;
-      captureCopy.pixels[index + 1] = myMagenta;
-      captureCopy.pixels[index + 2] = myYellow;
+      /*
+      Useful links
+      https://users.ece.utexas.edu/~bevans/talks/hp-dsp-seminar/07_C6xImage2/tsld011.htm
+      https://www.youtube.com/watch?v=X8OY-iwK_Kw
+      https://colormine.org/convert/rgb-to-cmy
+      */
+      // ----- Convert from RGB to CMY (NOTE RGB 255 = CMY 0) ----- //
+      // Normalise RGB from 0~255 to 0~1
+      chanR = map(chanR, 0, 255, 0, 1);
+      chanG = map(chanG, 0, 255, 0, 1);
+      chanB = map(chanB, 0, 255, 0, 1);
+      // Calculate CMY
+      let myCyan = 1 - chanR;
+      let myMagenta = 1 - chanG;
+      let myYellow = 1 - chanB;
+      // Change output and reset range back to 0~255
+      captureCopy.pixels[index + 0] = map(myCyan, 0, 1, 255, 0);
+      captureCopy.pixels[index + 1] = map(myMagenta, 0, 1, 255, 0);
+      captureCopy.pixels[index + 2] = map(myYellow, 0, 1, 255, 0);
     }
   }
   captureCopy.updatePixels();
   image(captureCopy, x, y, w, h);
 }
 
+// TODO choose one formula to use
 function captureEditColourSpace2(src, x, y, w, h) {
   let captureCopy = createImage(setWidth, setHeight);
   captureCopy.copy(src, 0, 0, setWidth, setHeight, 0, 0, setWidth, setHeight);
@@ -389,19 +401,59 @@ function captureEditColourSpace2(src, x, y, w, h) {
       let chanR = captureCopy.pixels[index + 0];
       let chanG = captureCopy.pixels[index + 1];
       let chanB = captureCopy.pixels[index + 2];
-      // See https://users.ece.utexas.edu/~bevans/talks/hp-dsp-seminar/07_C6xImage2/tsld011.htm
-      // Convert from RGB to CMY
-      let myCyan = 255 - chanR;
-      let myMagenta = 255 - chanG;
-      let myYellow = 255 - chanB;
-      // Convert from CMY to CMYK
-      let myKey = min(myCyan, myMagenta, myYellow);
-      myCyan = (255 * (myCyan - myKey)) / (255 - myKey);
-      myMagenta = (255 * (myMagenta - myKey)) / (255 - myKey);
-      myYellow = (255 * (myYellow - myKey)) / (255 - myKey);
-      captureCopy.pixels[index + 0] = myCyan;
-      captureCopy.pixels[index + 1] = myMagenta;
-      captureCopy.pixels[index + 2] = myYellow;
+      /*
+      Useful links
+      https://cs.stackexchange.com/questions/64549/convert-hsv-to-rgb-colors
+      */
+      // ----- Convert from RGB to HSV (NOTE H = 0~360, S = 0~1, V = 0~1) ----- //
+
+      // ----- Attempt 1: based on own source
+      // Value
+      let myValueMax = max(chanR, chanG, chanB);
+      let myValueMin = min(chanR, chanG, chanB);
+      // Saturation
+      let mySaturation;
+      if (myValueMax == 0 || myValueMin == 0) mySaturation = 0;
+      else mySaturation = (myValueMax - myValueMin) / myValueMax;
+      // Hue
+      let myHue;
+      if (myValueMax == chanR) myHue = 60 * ((0 + (chanG - chanB)) / (myValueMax - myValueMin));
+      else if (myValueMax == chanG) myHue = 60 * ((2 + (chanB - chanR)) / (myValueMax - myValueMin));
+      else if (myValueMax == chanB) myHue = 60 * ((4 + (chanR - chanG)) / (myValueMax - myValueMin));
+      if (myHue < 0) myHue += 360;
+      // Change output and reset range back to 0~255
+      captureCopy.pixels[index + 0] = map(myHue, 0, 360, 0, 255);
+      captureCopy.pixels[index + 1] = map(mySaturation, 0, 1, 0, 255);
+      captureCopy.pixels[index + 2] = map(myValueMax, 0, 1, 0, 255);
+
+      // // ----- Attempt 2: based on Coursera PDF
+      // let maxRGB = max(chanR, chanG, chanB);
+      // let minRGB = min(chanR, chanG, chanB);
+      // // Saturation
+      // let mySaturation = (maxRGB - minRGB) / maxRGB;
+      // // Value
+      // let myValue = maxRGB;
+      // // Hue
+      // let myHue;
+      // let chanRPrime = (maxRGB - chanR) / (maxRGB - minRGB);
+      // let chanGPrime = (maxRGB - chanG) / (maxRGB - minRGB);
+      // let chanBPrime = (maxRGB - chanB) / (maxRGB - minRGB);
+      // if (mySaturation == 0) {
+      //   myHue = undefined;
+      // } else {
+      //   if (chanR == maxRGB && chanG == minRGB) myHue = 5 + chanBPrime;
+      //   else if (chanR == maxRGB && chanG != minRGB) myHue = 1 - chanGPrime;
+      //   else if (chanG == maxRGB && chanB == minRGB) myHue = chanRPrime + 1;
+      //   else if (chanG == maxRGB && chanB != minRGB) myHue = 3 - chanBPrime;
+      //   else if (chanR == maxRGB) myHue = 3 + chanGPrime;
+      //   else myHue = 5 - chanRPrime;
+      // }
+      // myHue *= 60;
+      // myHue %= 360;
+      // // Change output and reset range back to 0~255
+      // captureCopy.pixels[index + 0] = map(myHue, 0, 360, 0, 255);
+      // captureCopy.pixels[index + 1] = map(mySaturation, 0, 1, 0, 255);
+      // captureCopy.pixels[index + 2] = map(maxRGB, 0, 1, 0, 255);
     }
   }
   captureCopy.updatePixels();
