@@ -22,6 +22,9 @@ let blueRemovedSlider;
 let cyanSlider;
 let magentaSlider;
 let yellowSlider;
+let hueSlider;
+let satSlider;
+let valSlider;
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
@@ -70,11 +73,14 @@ function setup() {
   cyanSlider = createSlider(0, 100, 100, 1);
   magentaSlider = createSlider(0, 100, 100, 1);
   yellowSlider = createSlider(0, 100, 100, 1);
+  hueSlider = createSlider(0, 360, 360, 1);
+  satSlider = createSlider(0, 100, 100, 1);
+  valSlider = createSlider(0, 100, 100, 1);
 
   let sliders = [];
-  sliders.push(brightSlider, redSlider, greenSlider, blueSlider, redRemovedSlider, greenRemovedSlider, blueRemovedSlider, cyanSlider, magentaSlider, yellowSlider);
+  sliders.push(brightSlider, redSlider, greenSlider, blueSlider, redRemovedSlider, greenRemovedSlider, blueRemovedSlider, cyanSlider, magentaSlider, yellowSlider, hueSlider, satSlider, valSlider);
   for (let i = 0; i < sliders.length; i++) {
-    sliders[i].style("width", capture.width + "px");
+    sliders[i].style("width", capture.width + "px"); // Set slider's width to be capture's width by default
   }
 }
 
@@ -112,7 +118,7 @@ function draw() {
   hoverEffectAndText(positions[0][1].x, positions[0][1].y, capture.width, capture.height, "Greyscale\nand\nBrightness at " + brightSlider.value() + "%", 2);
   sliderAndText(brightSlider, positions[0][1].x, positions[0][1].y, "Brightness", "%");
 
-  // Row 2 NOTE unsure if this is correct
+  // Row 2 TODO: unsure if this is correct
   captureEditR(inputFeed, positions[1][0].x, positions[1][0].y, setWidth, setHeight);
   hoverEffectAndText(positions[1][0].x, positions[1][0].y, capture.width, capture.height, "Red Channel", 0);
   sliderAndText(redSlider, positions[1][0].x, positions[1][0].y, "Red Value");
@@ -125,7 +131,7 @@ function draw() {
   hoverEffectAndText(positions[1][2].x, positions[1][2].y, capture.width, capture.height, "Blue Channel", 0);
   sliderAndText(blueSlider, positions[1][2].x, positions[1][2].y, "Blue Value");
 
-  // Row 3 NOTE unsure if this is correct
+  // Row 3 TODO: unsure if this is correct
   captureEditSegment1(inputFeed, positions[2][0].x, positions[2][0].y, setWidth, setHeight);
   hoverEffectAndText(positions[2][0].x, positions[2][0].y, capture.width, capture.height, "Segmented Image", 0);
   sliderAndText(redRemovedSlider, positions[2][0].x, positions[2][0].y, "Red Removed");
@@ -138,7 +144,7 @@ function draw() {
   hoverEffectAndText(positions[2][2].x, positions[2][2].y, capture.width, capture.height, "Segmented Image", 0);
   sliderAndText(blueRemovedSlider, positions[2][2].x, positions[2][2].y, "Blue Removed");
 
-  // Row 4 NOTE unsure if this is correct
+  // Row 4 TODO: unsure if this is correct
   captureEditRepeat(inputFeed, positions[3][0].x, positions[3][0].y, setWidth, setHeight);
   hoverEffectAndText(positions[3][0].x, positions[3][0].y, capture.width, capture.height, "Webcam\nImage\n\n(Repeat)", 3);
 
@@ -148,18 +154,21 @@ function draw() {
   captureEditColourSpace2(inputFeed, positions[3][2].x, positions[3][2].y, setWidth, setHeight);
   hoverEffectAndText(positions[3][2].x, positions[3][2].y, capture.width, capture.height, "Colour Space\n(Conversion)\n2\n\nRGB to HSV", 4);
 
-  // Row 5 TODO
+  // Row 5 TODO: very unsure if this is correct
   captureEditFaceDetect(inputFeed, positions[4][0].x, positions[4][0].y, setWidth, setHeight);
   hoverEffectAndText(positions[4][0].x, positions[4][0].y, capture.width, capture.height, "Face Detection\nand\nReplaced\nFace Images", 3);
 
   captureEditColourSpace1Segment(inputFeed, positions[4][1].x, positions[4][1].y, setWidth, setHeight);
   hoverEffectAndText(positions[4][1].x, positions[4][1].y, capture.width, capture.height, "Segmented Image\nfrom\nColour Space\n(Conversion)\n1", 4);
-  sliderAndTextAlignLeft(cyanSlider, positions[4][1].x, positions[4][1].y, "Cyan", "%");
-  sliderAndTextAlignLeft(magentaSlider, positions[4][1].x, positions[4][1].y + cyanSlider.height * 1.2, "Magenta", "%");
-  sliderAndTextAlignLeft(yellowSlider, positions[4][1].x, positions[4][1].y + cyanSlider.height * 1.2 + magentaSlider.height * 1.2, "Yellow", "%");
+  sliderAndTextAlignLeft(cyanSlider, inputFeed.width * 0.55, positions[4][1].x, positions[4][1].y, "Cyan", "%");
+  sliderAndTextAlignLeft(magentaSlider, inputFeed.width * 0.55, positions[4][1].x, positions[4][1].y + cyanSlider.height * 1.2, "Magenta", "%");
+  sliderAndTextAlignLeft(yellowSlider, inputFeed.width * 0.55, positions[4][1].x, positions[4][1].y + cyanSlider.height * 1.2 + magentaSlider.height * 1.2, "Yellow", "%");
 
   captureEditColourSpace2Segment(inputFeed, positions[4][2].x, positions[4][2].y, setWidth, setHeight);
   hoverEffectAndText(positions[4][2].x, positions[4][2].y, capture.width, capture.height, "Segmented Image\nfrom\nColour Space\n(Conversion)\n2", 4);
+  sliderAndTextAlignLeft(hueSlider, inputFeed.width * 0.45, positions[4][2].x, positions[4][2].y, "Hue", "°");
+  sliderAndTextAlignLeft(satSlider, inputFeed.width * 0.45, positions[4][2].x, positions[4][2].y + hueSlider.height * 1.2, "Sat.", "%");
+  sliderAndTextAlignLeft(valSlider, inputFeed.width * 0.45, positions[4][2].x, positions[4][2].y + hueSlider.height * 1.2 + satSlider.height * 1.2, "Value", "%");
 }
 
 function windowResized() {
@@ -168,6 +177,7 @@ function windowResized() {
 
 // Helper functions
 function hoverEffectAndText(x, y, w, h, string, linebreakCount) {
+  // Hover effect
   if (
     // format
     mouseX > x &&
@@ -188,42 +198,49 @@ function hoverEffectAndText(x, y, w, h, string, linebreakCount) {
   if >0 line break, then "- (textSize() * linebreakCount) / 2"
   */
 
+  // Text
   let midX = x + w / 2;
   let midY;
   if (linebreakCount == 0) midY = y + h / 2 + textSize() / 2;
   else midY = y + h / 2 - (textSize() * linebreakCount) / 2;
-
   text(string, midX, midY);
 }
 
-function sliderAndText(incomingSlider, x, y, string, stringSuffix = "") {
-  // Slider (based on capture's dimensions)
-  incomingSlider.position(x, y + capture.height + incomingSlider.height);
-
-  // Text (based on incomingSlider's dimensions)
+function sliderAndText(incomingSlider, inputFeedX, inputFeedY, string, stringSuffix = "") {
+  // Text (based on inputFeed's dimensions and incomingSlider's height only)
   text(
     // format
     string + ": " + incomingSlider.value() + stringSuffix,
-    incomingSlider.x + incomingSlider.width / 2,
-    incomingSlider.y
+    inputFeedX + inputFeed.width / 2,
+    inputFeedY + inputFeed.height + incomingSlider.height
+  );
+
+  // Slider (based on inputFeed's dimensions)
+  incomingSlider.position(
+    // format
+    inputFeedX,
+    inputFeedY + inputFeed.height + incomingSlider.height
   );
 }
 
-function sliderAndTextAlignLeft(incomingSlider, x, y, string, stringSuffix = "") {
-  // Slider (based on capture's dimensions)
-  let sliderStartX = capture.width * 0.55;
-  incomingSlider.position(x + sliderStartX, y + capture.height + textSize() / 8); // NOTE: added "+ textSize() / 8" to center slider vertically
-  incomingSlider.style("width", capture.width - sliderStartX + "px");
-
-  // Text (based on capture's dimensions and incomingSlider's height only)
+function sliderAndTextAlignLeft(incomingSlider, sliderWidth, inputFeedX, inputFeedY, string, stringSuffix = "") {
+  // Text (based on inputFeed's dimensions and incomingSlider's height only)
   textAlign(LEFT);
   text(
     // format
     string + ": " + incomingSlider.value() + stringSuffix,
-    x,
-    y + capture.height + incomingSlider.height
+    inputFeedX,
+    inputFeedY + inputFeed.height + incomingSlider.height
   );
   textAlign(CENTER); // reset to default
+
+  // Slider (based on inputFeed's dimensions)
+  incomingSlider.position(
+    // format
+    inputFeedX + sliderWidth,
+    inputFeedY + inputFeed.height + textSize() / 8 // NOTE: added "+ textSize() / 8" to centralise a tiny bit
+  );
+  incomingSlider.style("width", inputFeed.width - sliderWidth + "px");
 }
 
 /*
@@ -390,21 +407,25 @@ function captureEditColourSpace1(src, x, y, w, h) {
       let chanR = captureCopy.pixels[index + 0];
       let chanG = captureCopy.pixels[index + 1];
       let chanB = captureCopy.pixels[index + 2];
+
       /*
       Useful links
       https://users.ece.utexas.edu/~bevans/talks/hp-dsp-seminar/07_C6xImage2/tsld011.htm
       https://www.youtube.com/watch?v=X8OY-iwK_Kw
       https://colormine.org/convert/rgb-to-cmy
       */
-      // ----- Convert from RGB to CMY (NOTE RGB 255 = CMY 0) ----- //
+
+      // ----- Convert from RGB to CMY: note that RGB 255 = CMY 0 ----- //
       // Normalise RGB from 0~255 to 0~1
       chanR = map(chanR, 0, 255, 0, 1);
       chanG = map(chanG, 0, 255, 0, 1);
       chanB = map(chanB, 0, 255, 0, 1);
+
       // Calculate CMY
       let myCyan = 1 - chanR;
       let myMagenta = 1 - chanG;
       let myYellow = 1 - chanB;
+
       // Change output and reset range back to 0~255
       captureCopy.pixels[index + 0] = map(myCyan, 0, 1, 255, 0);
       captureCopy.pixels[index + 1] = map(myMagenta, 0, 1, 255, 0);
@@ -415,7 +436,7 @@ function captureEditColourSpace1(src, x, y, w, h) {
   image(captureCopy, x, y, w, h);
 }
 
-// TODO choose one formula to use
+// TODO: choose one formula to use. once done, ensure captureEditColourSpace2Segment() below uses the same
 function captureEditColourSpace2(src, x, y, w, h) {
   let captureCopy = createImage(setWidth, setHeight);
   captureCopy.copy(src, 0, 0, setWidth, setHeight, 0, 0, setWidth, setHeight);
@@ -426,11 +447,13 @@ function captureEditColourSpace2(src, x, y, w, h) {
       let chanR = captureCopy.pixels[index + 0];
       let chanG = captureCopy.pixels[index + 1];
       let chanB = captureCopy.pixels[index + 2];
+
       /*
       Useful links
       https://cs.stackexchange.com/questions/64549/convert-hsv-to-rgb-colors
       */
-      // ----- Convert from RGB to HSV (NOTE H = 0~360, S = 0~1, V = 0~1) ----- //
+
+      // ----- Convert from RGB to HSV: note that H = 0~360 / S = 0~1 / V = 0~1 ----- //
 
       // ----- Attempt 1: based on own source (the link above)
       // Value
@@ -486,6 +509,7 @@ function captureEditColourSpace2(src, x, y, w, h) {
 }
 
 // Row 5
+// TEST
 function captureEditFaceDetect(src, x, y, w, h) {
   let captureCopy = createImage(setWidth, setHeight);
   captureCopy.copy(src, 0, 0, setWidth, setHeight, 0, 0, setWidth, setHeight);
@@ -506,7 +530,7 @@ function captureEditFaceDetect(src, x, y, w, h) {
   image(captureCopy, x, y, w, h);
 }
 
-// Copy-pasted from captureEditColourSpace1()
+// Copy-pasted from captureEditColourSpace1() above
 function captureEditColourSpace1Segment(src, x, y, w, h) {
   let captureCopy = createImage(setWidth, setHeight);
   captureCopy.copy(src, 0, 0, setWidth, setHeight, 0, 0, setWidth, setHeight);
@@ -517,9 +541,13 @@ function captureEditColourSpace1Segment(src, x, y, w, h) {
       let chanR = captureCopy.pixels[index + 0];
       let chanG = captureCopy.pixels[index + 1];
       let chanB = captureCopy.pixels[index + 2];
+
+      // Normalise RGB and calculate CMY
       let myCyan = 1 - map(chanR, 0, 255, 0, 1);
       let myMagenta = 1 - map(chanG, 0, 255, 0, 1);
       let myYellow = 1 - map(chanB, 0, 255, 0, 1);
+
+      // Change output and reset range back to 0~255
       captureCopy.pixels[index + 0] = map(myCyan * (cyanSlider.value() / 100), 0, 1, 255, 0);
       captureCopy.pixels[index + 1] = map(myMagenta * (magentaSlider.value() / 100), 0, 1, 255, 0);
       captureCopy.pixels[index + 2] = map(myYellow * (yellowSlider.value() / 100), 0, 1, 255, 0);
@@ -529,7 +557,8 @@ function captureEditColourSpace1Segment(src, x, y, w, h) {
   image(captureCopy, x, y, w, h);
 }
 
-// Copy-pasted from captureEditColourSpace2()
+// TODO: unsure if slider value is applied correctly (eg. should i "+ hueSlider.value()" instead?)
+// Copy-pasted from captureEditColourSpace2() above
 function captureEditColourSpace2Segment(src, x, y, w, h) {
   let captureCopy = createImage(setWidth, setHeight);
   captureCopy.copy(src, 0, 0, setWidth, setHeight, 0, 0, setWidth, setHeight);
@@ -540,10 +569,27 @@ function captureEditColourSpace2Segment(src, x, y, w, h) {
       let chanR = captureCopy.pixels[index + 0];
       let chanG = captureCopy.pixels[index + 1];
       let chanB = captureCopy.pixels[index + 2];
-      let chanA = captureCopy.pixels[index + 3];
-      captureCopy.pixels[index + 0] = chanR;
-      captureCopy.pixels[index + 1] = chanG;
-      captureCopy.pixels[index + 2] = chanB;
+
+      // Value
+      let myValueMax = max(chanR, chanG, chanB);
+      let myValueMin = min(chanR, chanG, chanB);
+
+      // Saturation
+      let mySaturation;
+      if (myValueMax == 0 || myValueMin == 0) mySaturation = 0;
+      else mySaturation = (myValueMax - myValueMin) / myValueMax;
+
+      // Hue
+      let myHue;
+      if (myValueMax == chanR) myHue = 60 * ((0 + (chanG - chanB)) / (myValueMax - myValueMin));
+      else if (myValueMax == chanG) myHue = 60 * ((2 + (chanB - chanR)) / (myValueMax - myValueMin));
+      else if (myValueMax == chanB) myHue = 60 * ((4 + (chanR - chanG)) / (myValueMax - myValueMin));
+      if (myHue < 0) myHue += 360;
+
+      // Change output and reset range back to 0~255
+      captureCopy.pixels[index + 0] = map(myHue * (hueSlider.value() / 360), 0, 360, 0, 255);
+      captureCopy.pixels[index + 1] = map(mySaturation * (satSlider.value() / 100), 0, 1, 0, 255);
+      captureCopy.pixels[index + 2] = map(myValueMax * (valSlider.value() / 100), 0, 1, 0, 255);
     }
   }
   captureCopy.updatePixels();
