@@ -110,7 +110,8 @@ function setup() {
   detectDefaultButton = createButton("Default");
   detectGreyButton = createButton("Greyscale");
   detectBlurButton = createButton("Blur");
-  detectConvertButton = createButton("To HSV");
+  detectConvertButton = createButton("HSV Mode");
+  detectPixelButton = createButton("Pixelate");
 
   // Button function
   detectDefaultButton.mousePressed(function () {
@@ -131,6 +132,11 @@ function setup() {
   detectConvertButton.mousePressed(function () {
     setAllEffectsFalse();
     detectConvertEffect = true;
+  });
+
+  detectPixelButton.mousePressed(function () {
+    setAllEffectsFalse();
+    detectPixelEffect = true;
   });
 }
 
@@ -217,6 +223,7 @@ function draw() {
   detectBlurButton.position(positions[4][0].x, detectGreyButton.y + detectGreyButton.height);
   // Right side buttons
   detectConvertButton.position(positions[4][0].x + inputFeed.width - detectConvertButton.width, positions[4][0].y + inputFeed.height);
+  detectPixelButton.position(positions[4][0].x + inputFeed.width - detectPixelButton.width, detectConvertButton.y + detectConvertButton.height);
 
   captureEditColourSpace1Segment(inputFeed, positions[4][1].x, positions[4][1].y, setWidth, setHeight);
   hoverEffectAndText(positions[4][1].x, positions[4][1].y, capture.width, capture.height, "Segmented Image\nfrom\nColour Space\n(Conversion)\n1", 4);
@@ -512,6 +519,8 @@ choose one formula to use
 then, ensure the following function uses the same one, as it is copy-pasted from here to there:
 - captureEditColourSpace2Segment()
 - faceDetectEdit()'s 'detectConvertEffect'
+
+then refactor so it can easily be re-used
 */
 function captureEditColourSpace2(src, x, y, w, h) {
   let captureCopy = createImage(setWidth, setHeight);
@@ -634,42 +643,59 @@ function faceDetectEdit(src, faceX, faceY, faceWidth, faceHeight) {
       let chanR = src.pixels[index + 0];
       let chanG = src.pixels[index + 1];
       let chanB = src.pixels[index + 2];
+      // Grey effect
       if (detectGreyEffect) {
         src.pixels[index + 0] = map(chanR, 0, 255, 255, 0);
         src.pixels[index + 1] = map(chanG, 0, 255, 255, 0);
         src.pixels[index + 2] = map(chanB, 0, 255, 255, 0);
+
+        // Blur effect
       } else if (detectBlurEffect) {
         let myMatrix = createNormalBlurMatrix(15);
         let myConv = convolution(x, y, myMatrix, src);
         src.pixels[index + 0] = myConv[0];
         src.pixels[index + 1] = myConv[1];
         src.pixels[index + 2] = myConv[2];
+
+        // Convert colour effect, copy-pasted from captureEditColourSpace2() above
       } else if (detectConvertEffect) {
-        // Value
         let myValueMax = max(chanR, chanG, chanB);
         let myValueMin = min(chanR, chanG, chanB);
-        // Saturation
         let mySaturation;
         if (myValueMax == 0 || myValueMin == 0) mySaturation = 0;
         else mySaturation = (myValueMax - myValueMin) / myValueMax;
-        // Hue
         let myHue;
         if (myValueMax == chanR) myHue = 60 * ((0 + (chanG - chanB)) / (myValueMax - myValueMin));
         else if (myValueMax == chanG) myHue = 60 * ((2 + (chanB - chanR)) / (myValueMax - myValueMin));
         else if (myValueMax == chanB) myHue = 60 * ((4 + (chanR - chanG)) / (myValueMax - myValueMin));
         if (myHue < 0) myHue += 360;
-        // Change output and reset range back to 0~255
         src.pixels[index + 0] = map(myHue, 0, 360, 0, 255);
         src.pixels[index + 1] = map(mySaturation, 0, 1, 0, 255);
         src.pixels[index + 2] = map(myValueMax, 0, 1, 0, 255);
+
+        // Pixelate effect
       } else if (detectPixelEffect) {
-        // x
+        createPixelEffect(10, src, faceX, faceY, faceWidth, faceHeight);
       }
     }
   }
 }
 
 // faceDetectEdit() helper functions
+function createNormalBlurMatrix(matrixSize) {
+  let totalElements = matrixSize * matrixSize;
+  let matrix = [];
+
+  for (let i = 0; i < matrixSize; i++) {
+    matrix[i] = [];
+    for (let j = 0; j < matrixSize; j++) {
+      matrix[i].push(1 / totalElements);
+    }
+  }
+
+  return matrix;
+}
+
 function convolution(x, y, matrix, src) {
   let matrixSize = matrix.length;
   let totalRed = 0.0;
@@ -693,18 +719,45 @@ function convolution(x, y, matrix, src) {
   return [totalRed, totalGreen, totalBlue];
 }
 
-function createNormalBlurMatrix(matrixSize) {
-  let totalElements = matrixSize * matrixSize;
-  let matrix = [];
+function createPixelEffect(pixelSize, src, faceX, faceY, faceWidth, faceHeight) {
+  // Within face detected area...
+  for (let x = faceX; x < faceX + faceWidth; x += pixelSize) {
+    for (let y = faceY; y < faceY + faceHeight; y += pixelSize) {
+      let sumR = 0;
+      let sumG = 0;
+      let sumB = 0;
+      // Within every block of pixelSize...
+      for (let i = 0; i < pixelSize; i++) {
+        for (let j = 0; j < pixelSize; j++) {
+          let index = (src.width * (y + j) + (x + i)) * 4;
+          let chanR = src.pixels[index + 0];
+          let chanG = src.pixels[index + 1];
+          let chanB = src.pixels[index + 2];
+          // Get sum of RGB values in the size of pixelSize
+          sumR += chanR;
+          sumG += chanG;
+          sumB += chanB;
+        }
+      }
 
-  for (let i = 0; i < matrixSize; i++) {
-    matrix[i] = [];
-    for (let j = 0; j < matrixSize; j++) {
-      matrix[i].push(1 / totalElements);
+      // Get average RGB values in every pixelSize block
+      let pixelArea = pixelSize * pixelSize;
+      let avgR = sumR / pixelArea;
+      let avgG = sumG / pixelArea;
+      let avgB = sumB / pixelArea;
+
+      // Within every block of pixelSize...
+      for (let i = 0; i < pixelSize; i++) {
+        for (let j = 0; j < pixelSize; j++) {
+          let index = (src.width * (y + j) + (x + i)) * 4;
+          // Apply average RGB values to the corresponding RGB channels
+          src.pixels[index + 0] = avgR;
+          src.pixels[index + 1] = avgG;
+          src.pixels[index + 2] = avgB;
+        }
+      }
     }
   }
-
-  return matrix;
 }
 
 // Copy-pasted from captureEditColourSpace1() above
