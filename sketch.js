@@ -106,10 +106,11 @@ function setup() {
   let classifier = objectdetect.frontalface;
   detector = new objectdetect.detector(setWidth, setHeight, scaleFactor, classifier);
 
-  // Button creation
+  // Button creation (tried using loop to createButton(), doesn't work)
   detectDefaultButton = createButton("Default");
   detectGreyButton = createButton("Greyscale");
   detectBlurButton = createButton("Blur");
+  detectConvertButton = createButton("To HSV");
 
   // Button function
   detectDefaultButton.mousePressed(function () {
@@ -125,6 +126,11 @@ function setup() {
   detectBlurButton.mousePressed(function () {
     setAllEffectsFalse();
     detectBlurEffect = true;
+  });
+
+  detectConvertButton.mousePressed(function () {
+    setAllEffectsFalse();
+    detectConvertEffect = true;
   });
 }
 
@@ -202,12 +208,15 @@ function draw() {
   captureEditColourSpace2(inputFeed, positions[3][2].x, positions[3][2].y, setWidth, setHeight);
   hoverEffectAndText(positions[3][2].x, positions[3][2].y, capture.width, capture.height, "Colour Space\n(Conversion)\n2\n\nRGB to HSV", 4);
 
-  // Row 5
+  // Row 5 TODO
   captureEditFaceDetect(inputFeed, positions[4][0].x, positions[4][0].y, setWidth, setHeight);
   hoverEffectAndText(positions[4][0].x, positions[4][0].y, capture.width, capture.height, "Face Detection\nand\nReplaced\nFace Images", 3);
+  // Left side buttons
   detectDefaultButton.position(positions[4][0].x, positions[4][0].y + inputFeed.height);
   detectGreyButton.position(positions[4][0].x, detectDefaultButton.y + detectDefaultButton.height);
   detectBlurButton.position(positions[4][0].x, detectGreyButton.y + detectGreyButton.height);
+  // Right side buttons
+  detectConvertButton.position(positions[4][0].x + inputFeed.width - detectConvertButton.width, positions[4][0].y + inputFeed.height);
 
   captureEditColourSpace1Segment(inputFeed, positions[4][1].x, positions[4][1].y, setWidth, setHeight);
   hoverEffectAndText(positions[4][1].x, positions[4][1].y, capture.width, capture.height, "Segmented Image\nfrom\nColour Space\n(Conversion)\n1", 4);
@@ -495,7 +504,15 @@ function captureEditColourSpace1(src, x, y, w, h) {
   image(captureCopy, x, y, w, h);
 }
 
-// TODO: choose one formula to use. once done, ensure captureEditColourSpace2Segment() below uses the same
+/*
+TODO
+===== ===== ===== ===== =====
+choose one formula to use
+
+then, ensure the following function uses the same one, as it is copy-pasted from here to there:
+- captureEditColourSpace2Segment()
+- faceDetectEdit()'s 'detectConvertEffect'
+*/
 function captureEditColourSpace2(src, x, y, w, h) {
   let captureCopy = createImage(setWidth, setHeight);
   captureCopy.copy(src, 0, 0, setWidth, setHeight, 0, 0, setWidth, setHeight);
@@ -604,8 +621,12 @@ function captureEditFaceDetect(src, x, y, w, h) {
   }
 }
 
-// TODO 'greyscale' effect is incorrect, but can fix later
-// TODO add sliders for every effect if possible
+/*
+TODO
+===== ===== ===== ===== =====
+1) 'greyscale' effect is incorrect, but can fix later
+2) add sliders for every effect if possible
+*/
 function faceDetectEdit(src, faceX, faceY, faceWidth, faceHeight) {
   for (let x = faceX; x < faceX + faceWidth; x++) {
     for (let y = faceY; y < faceY + faceHeight; y++) {
@@ -623,6 +644,26 @@ function faceDetectEdit(src, faceX, faceY, faceWidth, faceHeight) {
         src.pixels[index + 0] = myConv[0];
         src.pixels[index + 1] = myConv[1];
         src.pixels[index + 2] = myConv[2];
+      } else if (detectConvertEffect) {
+        // Value
+        let myValueMax = max(chanR, chanG, chanB);
+        let myValueMin = min(chanR, chanG, chanB);
+        // Saturation
+        let mySaturation;
+        if (myValueMax == 0 || myValueMin == 0) mySaturation = 0;
+        else mySaturation = (myValueMax - myValueMin) / myValueMax;
+        // Hue
+        let myHue;
+        if (myValueMax == chanR) myHue = 60 * ((0 + (chanG - chanB)) / (myValueMax - myValueMin));
+        else if (myValueMax == chanG) myHue = 60 * ((2 + (chanB - chanR)) / (myValueMax - myValueMin));
+        else if (myValueMax == chanB) myHue = 60 * ((4 + (chanR - chanG)) / (myValueMax - myValueMin));
+        if (myHue < 0) myHue += 360;
+        // Change output and reset range back to 0~255
+        src.pixels[index + 0] = map(myHue, 0, 360, 0, 255);
+        src.pixels[index + 1] = map(mySaturation, 0, 1, 0, 255);
+        src.pixels[index + 2] = map(myValueMax, 0, 1, 0, 255);
+      } else if (detectPixelEffect) {
+        // x
       }
     }
   }
