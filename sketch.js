@@ -3,6 +3,7 @@ let setWidth = 640 / 4; // minimum = 160
 let setHeight = 480 / 4; // minimum = 120
 let marginWidth = 20;
 let marginHeight = 40;
+let buttonMargin = marginHeight / 4;
 let positions = []; // positions to end up like this: [ [{x,y}, {x,y}, {x,y}], repeat 4 more times ]
 
 // For picture-taking and resuming video
@@ -26,7 +27,7 @@ let hueSlider;
 let satSlider;
 let valSlider;
 
-// For face detection
+// For face detection (ensure 'Effect' variable is added to setAllEffectsFalse())
 let detector;
 
 let detectDefaultButton;
@@ -34,12 +35,14 @@ let detectGreyButton;
 let detectBlurButton;
 let detectConvertButton;
 let detectPixelButton;
+let detectNegativeButton;
 
 let detectDefaultEffect = true;
 let detectGreyEffect = false;
 let detectBlurEffect = false;
 let detectConvertEffect = false;
 let detectPixelEffect = false;
+let detectNegativeEffect = false;
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
@@ -112,6 +115,7 @@ function setup() {
   detectBlurButton = createButton("Blur");
   detectConvertButton = createButton("HSV Mode");
   detectPixelButton = createButton("Pixelate");
+  detectNegativeButton = createButton("Negative");
 
   // Button function
   detectDefaultButton.mousePressed(function () {
@@ -138,6 +142,11 @@ function setup() {
     setAllEffectsFalse();
     detectPixelEffect = true;
   });
+
+  detectNegativeButton.mousePressed(function () {
+    setAllEffectsFalse();
+    detectNegativeEffect = true;
+  });
 }
 
 function draw() {
@@ -150,7 +159,7 @@ function draw() {
     positions[i] = [];
     for (let j = 0; j < colCount; j++) {
       let totalWidth = colCount * (setWidth + marginWidth) - marginWidth;
-      let extraHeight = brightSlider.height * 3; // Any slider can be used
+      let extraHeight = detectDefaultButton.height * 3 + buttonMargin; // Any 3 buttons can be used + (buttonMargin)
       let totalHeight = rowCount * (setHeight + marginHeight) - marginHeight + extraHeight;
       let startX = (width - totalWidth) / 2;
       let startY = (height - totalHeight) / 2;
@@ -164,7 +173,6 @@ function draw() {
   // Shift pictureButton leftward a tiny bit when its text changes
   let buttonPosX = positions[0][2].x + capture.width / 2;
   let buttonPosY = positions[0][2].y;
-  let buttonMargin = marginHeight / 4;
   if (!pictureTaken) pictureButton.position(buttonPosX - pictureButton.width / 2, buttonPosY);
   else pictureButton.position(buttonPosX - pictureButton.width / 2 - 4, buttonPosY); // Move leftwards slightly due to longer button text
   videoButton.position(buttonPosX - videoButton.width / 2, buttonPosY + pictureButton.height + buttonMargin);
@@ -218,12 +226,13 @@ function draw() {
   captureEditFaceDetect(inputFeed, positions[4][0].x, positions[4][0].y, setWidth, setHeight);
   hoverEffectAndText(positions[4][0].x, positions[4][0].y, capture.width, capture.height, "Face Detection\nand\nReplaced\nFace Images", 3);
   // Left side buttons
-  detectDefaultButton.position(positions[4][0].x, positions[4][0].y + inputFeed.height);
+  detectDefaultButton.position(positions[4][0].x, positions[4][0].y + inputFeed.height + buttonMargin);
   detectGreyButton.position(positions[4][0].x, detectDefaultButton.y + detectDefaultButton.height);
   detectBlurButton.position(positions[4][0].x, detectGreyButton.y + detectGreyButton.height);
   // Right side buttons
-  detectConvertButton.position(positions[4][0].x + inputFeed.width - detectConvertButton.width, positions[4][0].y + inputFeed.height);
+  detectConvertButton.position(positions[4][0].x + inputFeed.width - detectConvertButton.width, positions[4][0].y + inputFeed.height + buttonMargin);
   detectPixelButton.position(positions[4][0].x + inputFeed.width - detectPixelButton.width, detectConvertButton.y + detectConvertButton.height);
+  detectNegativeButton.position(positions[4][0].x + inputFeed.width - detectNegativeButton.width, detectPixelButton.y + detectPixelButton.height);
 
   captureEditColourSpace1Segment(inputFeed, positions[4][1].x, positions[4][1].y, setWidth, setHeight);
   hoverEffectAndText(positions[4][1].x, positions[4][1].y, capture.width, capture.height, "Segmented Image\nfrom\nColour Space\n(Conversion)\n1", 4);
@@ -316,6 +325,7 @@ function setAllEffectsFalse() {
   detectBlurEffect = false;
   detectConvertEffect = false;
   detectPixelEffect = false;
+  detectNegativeEffect = false;
 }
 
 /*
@@ -633,7 +643,6 @@ function captureEditFaceDetect(src, x, y, w, h) {
 /*
 TODO
 ===== ===== ===== ===== =====
-1) 'greyscale' effect is incorrect, but can fix later
 2) add sliders for every effect if possible
 */
 function faceDetectEdit(src, faceX, faceY, faceWidth, faceHeight) {
@@ -645,9 +654,10 @@ function faceDetectEdit(src, faceX, faceY, faceWidth, faceHeight) {
       let chanB = src.pixels[index + 2];
       // Grey effect
       if (detectGreyEffect) {
-        src.pixels[index + 0] = map(chanR, 0, 255, 255, 0);
-        src.pixels[index + 1] = map(chanG, 0, 255, 255, 0);
-        src.pixels[index + 2] = map(chanB, 0, 255, 255, 0);
+        let grey = (chanR + chanG + chanB) / 3;
+        src.pixels[index + 0] = grey;
+        src.pixels[index + 1] = grey;
+        src.pixels[index + 2] = grey;
 
         // Blur effect
       } else if (detectBlurEffect) {
@@ -676,6 +686,12 @@ function faceDetectEdit(src, faceX, faceY, faceWidth, faceHeight) {
         // Pixelate effect
       } else if (detectPixelEffect) {
         createPixelEffect(10, src, faceX, faceY, faceWidth, faceHeight);
+
+        // Negative effect
+      } else if (detectNegativeEffect) {
+        src.pixels[index + 0] = map(chanR, 0, 255, 255, 0);
+        src.pixels[index + 1] = map(chanG, 0, 255, 255, 0);
+        src.pixels[index + 2] = map(chanB, 0, 255, 255, 0);
       }
     }
   }
