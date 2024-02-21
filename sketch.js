@@ -27,7 +27,7 @@ let hueSlider;
 let satSlider;
 let valSlider;
 
-// For face detection (ensure 'Effect' variable is added to setAllEffectsFalse())
+// For face detection
 let detector;
 
 let detectDefaultButton;
@@ -37,12 +37,16 @@ let detectConvertButton;
 let detectPixelButton;
 let detectNegativeButton;
 
-let detectDefaultEffect = true;
+let detectDefaultEffect = true; // Ensure this block of variables are copy-pasted to setAllEffectsFalse()
 let detectGreyEffect = false;
 let detectBlurEffect = false;
 let detectConvertEffect = false;
 let detectPixelEffect = false;
 let detectNegativeEffect = false;
+
+let detectDefaultSlider;
+let detectBlurSlider;
+let detectPixelSlider;
 
 function setup() {
   createCanvas(windowWidth, windowHeight);
@@ -147,6 +151,15 @@ function setup() {
     setAllEffectsFalse();
     detectNegativeEffect = true;
   });
+
+  // Slider creation
+  detectDefaultSlider = createSlider(1, 10, 2, 1);
+  detectBlurSlider = createSlider(1, 30, 15, 1);
+  detectPixelSlider = createSlider(1, 20, 10, 1);
+
+  detectDefaultSlider.style("width", capture.width / 2 + "px");
+  detectBlurSlider.style("width", capture.width / 2 + "px");
+  detectPixelSlider.style("width", capture.width / 2 + "px");
 }
 
 function draw() {
@@ -222,13 +235,17 @@ function draw() {
   captureEditColourSpace2(inputFeed, positions[3][2].x, positions[3][2].y, setWidth, setHeight);
   hoverEffectAndText(positions[3][2].x, positions[3][2].y, capture.width, capture.height, "Colour Space\n(Conversion)\n2\n\nRGB to HSV", 4);
 
-  // Row 5 TODO
+  // Row 5
   captureEditFaceDetect(inputFeed, positions[4][0].x, positions[4][0].y, setWidth, setHeight);
   hoverEffectAndText(positions[4][0].x, positions[4][0].y, capture.width, capture.height, "Face Detection\nand\nReplaced\nFace Images", 3);
   // Left side buttons
   detectDefaultButton.position(positions[4][0].x, positions[4][0].y + inputFeed.height + buttonMargin);
   detectGreyButton.position(positions[4][0].x, detectDefaultButton.y + detectDefaultButton.height);
   detectBlurButton.position(positions[4][0].x, detectGreyButton.y + detectGreyButton.height);
+  // Left side sliders
+  sliderAndTextBeside(detectDefaultSlider, positions[4][0].x, positions[4][0].y, "Box thickness", "px");
+  sliderAndTextBeside(detectBlurSlider, positions[4][0].x, positions[4][0].y + detectDefaultSlider.height * 2.5, "Blur", "x");
+  sliderAndTextBeside(detectPixelSlider, positions[4][0].x, positions[4][0].y + detectDefaultSlider.height * 2.5 + detectBlurSlider.height * 2.5, "Pixel", "px");
   // Right side buttons
   detectConvertButton.position(positions[4][0].x + inputFeed.width - detectConvertButton.width, positions[4][0].y + inputFeed.height + buttonMargin);
   detectPixelButton.position(positions[4][0].x + inputFeed.width - detectPixelButton.width, detectConvertButton.y + detectConvertButton.height);
@@ -317,6 +334,25 @@ function sliderAndTextAlignLeft(incomingSlider, sliderWidth, inputFeedX, inputFe
     inputFeedY + inputFeed.height + textSize() / 8 // NOTE: added "+ textSize() / 8" to centralise a tiny bit
   );
   incomingSlider.style("width", inputFeed.width - sliderWidth + "px");
+}
+
+function sliderAndTextBeside(incomingSlider, inputFeedX, inputFeedY, string, stringSuffix = "") {
+  // Text (based on inputFeed's dimensions)
+  textAlign(RIGHT);
+  text(
+    // format
+    string + ": " + incomingSlider.value() + stringSuffix,
+    inputFeedX - textSize() / 2,
+    inputFeedY + textSize()
+  );
+  textAlign(CENTER); // Reset to default
+
+  // Slider (based on inputFeed's dimensions)
+  incomingSlider.position(
+    // format
+    inputFeedX - incomingSlider.width - textSize() / 2,
+    inputFeedY + textSize()
+  );
 }
 
 function setAllEffectsFalse() {
@@ -623,7 +659,7 @@ function captureEditFaceDetect(src, x, y, w, h) {
         // Setup
         noFill();
         stroke(255);
-        strokeWeight(2);
+        strokeWeight(detectDefaultSlider.value());
         // Draw box
         rect(face[0], face[1], face[2], face[3]);
         pop();
@@ -640,11 +676,6 @@ function captureEditFaceDetect(src, x, y, w, h) {
   }
 }
 
-/*
-TODO
-===== ===== ===== ===== =====
-2) add sliders for every effect if possible
-*/
 function faceDetectEdit(src, faceX, faceY, faceWidth, faceHeight) {
   for (let x = faceX; x < faceX + faceWidth; x++) {
     for (let y = faceY; y < faceY + faceHeight; y++) {
@@ -661,7 +692,7 @@ function faceDetectEdit(src, faceX, faceY, faceWidth, faceHeight) {
 
         // Blur effect
       } else if (detectBlurEffect) {
-        let myMatrix = createNormalBlurMatrix(15);
+        let myMatrix = createNormalBlurMatrix(detectBlurSlider.value());
         let myConv = convolution(x, y, myMatrix, src);
         src.pixels[index + 0] = myConv[0];
         src.pixels[index + 1] = myConv[1];
@@ -685,7 +716,7 @@ function faceDetectEdit(src, faceX, faceY, faceWidth, faceHeight) {
 
         // Pixelate effect
       } else if (detectPixelEffect) {
-        createPixelEffect(10, src, faceX, faceY, faceWidth, faceHeight);
+        createPixelEffect(detectPixelSlider.value(), src, faceX, faceY, faceWidth, faceHeight);
 
         // Negative effect
       } else if (detectNegativeEffect) {
