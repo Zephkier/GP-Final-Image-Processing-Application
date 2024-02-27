@@ -3,7 +3,7 @@ let capture;
 let setWidth = 160; // This is the minimum, original = 640
 let setHeight = 120; // This is the minimum, original = 480
 let marginWidth = 20; // Recommended minimum = 20
-let marginHeight = 70; // Recommended minimum = 40 / maximum = 70
+let marginHeight = 60; // Recommended minimum = 60 for 1080p screen
 let positions = []; // positions to end up like this: [ [{x,y}, {x,y}, {x,y}], repeat 4 more times ]
 let hoverToggleButton;
 let hoverEffectIsOn = true;
@@ -46,9 +46,9 @@ let valThresholdSlider;
 
 // For threshold
 let thresholdToggleBlackButton;
-let thresholdToggleIsBlack = true;
+let thresholdShowPureBlack = true;
 let thresholdToggleWhiteButton;
-let thresholdToggleIsWhite = false;
+let thresholdToWhite = false;
 
 // For face detection
 let detector;
@@ -85,11 +85,11 @@ function setup() {
   capture.size(setWidth, setHeight);
   capture.hide();
 
-  hoverToggleButton = createButton("Toggle Cursor Hover:<br>On"); // Use "<br>" instead of "\n"
+  hoverToggleButton = createButton("Toggle Cursor Hover<br>On"); // Use "<br>" instead of "\n"
   hoverToggleButton.mousePressed(function () {
     hoverEffectIsOn = !hoverEffectIsOn;
-    if (hoverEffectIsOn) hoverToggleButton.html("Toggle Cursor Hover:<br>On");
-    else hoverToggleButton.html("Toggle Cursor Hover:<br>Off");
+    if (hoverEffectIsOn) hoverToggleButton.html("Toggle Cursor Hover<br>On");
+    else hoverToggleButton.html("Toggle Cursor Hover<br>Off");
   });
 
   // ----- For exporting ----- //
@@ -154,8 +154,8 @@ function setup() {
   magentaThresholdSlider = createSlider(0, 100, 66, 1);
   yellowThresholdSlider = createSlider(0, 100, 66, 1);
   hueThresholdSlider = createSlider(0, 360, 180, 1);
-  satThresholdSlider = createSlider(0, 100, 33, 1);
-  valThresholdSlider = createSlider(0, 100, 33, 1);
+  satThresholdSlider = createSlider(0, 100, 25, 1);
+  valThresholdSlider = createSlider(0, 100, 50, 1);
 
   let sliders = [];
   sliders.push(brightSlider, redSlider, greenSlider, blueSlider, redThresholdSlider, greenThresholdSlider, blueThresholdSlider, cyanSlider, magentaSlider, yellowSlider, hueSlider, satSlider, valSlider, cyanThresholdSlider, magentaThresholdSlider, yellowThresholdSlider, hueThresholdSlider, satThresholdSlider, valThresholdSlider);
@@ -164,18 +164,18 @@ function setup() {
   }
 
   // ----- For threshold ----- //
-  thresholdToggleBlackButton = createButton("Toggle Black:<br>On"); // Use "<br>" instead of "\n"
+  thresholdToggleBlackButton = createButton("See Pure Black<br>On"); // Use "<br>" instead of "\n"
   thresholdToggleBlackButton.mousePressed(function () {
-    thresholdToggleIsBlack = !thresholdToggleIsBlack;
-    if (thresholdToggleIsBlack) thresholdToggleBlackButton.html("Toggle Black:<br>On");
-    else thresholdToggleBlackButton.html("Toggle Black:<br>Off");
+    thresholdShowPureBlack = !thresholdShowPureBlack;
+    if (thresholdShowPureBlack) thresholdToggleBlackButton.html("See Pure Black<br>On");
+    else thresholdToggleBlackButton.html("See Pure Black<br>Off");
   });
 
-  thresholdToggleWhiteButton = createButton("Toggle White:<br>Off"); // Use "<br>" instead of "\n"
+  thresholdToggleWhiteButton = createButton("Threshold to White<br>Off"); // Use "<br>" instead of "\n"
   thresholdToggleWhiteButton.mousePressed(function () {
-    thresholdToggleIsWhite = !thresholdToggleIsWhite;
-    if (thresholdToggleIsWhite) thresholdToggleWhiteButton.html("Toggle White:<br>On");
-    else thresholdToggleWhiteButton.html("Toggle White:<br>Off");
+    thresholdToWhite = !thresholdToWhite;
+    if (thresholdToWhite) thresholdToggleWhiteButton.html("Threshold to White<br>On");
+    else thresholdToggleWhiteButton.html("Threshold to White<br>Off");
   });
 
   // ----- For face detection ----- //
@@ -303,11 +303,11 @@ function draw() {
   textAndSliderBottomCenter(greenSlider, positions[1][1].x, positions[1][1].y, "Green Value: ");
   textAndSliderBottomCenter(blueSlider, positions[1][2].x, positions[1][2].y, "Blue Value: ");
   // Row 3
-  thresholdToggleBlackButton.position(positions[2][0].x - thresholdToggleBlackButton.width - thresholdToggleBlackButton.height / 4, positions[2][0].y);
-  thresholdToggleWhiteButton.position(positions[2][0].x - thresholdToggleWhiteButton.width - thresholdToggleWhiteButton.height / 4, positions[2][0].y + thresholdToggleBlackButton.height + buttonMargin);
-  textAndSliderBottomCenter(redThresholdSlider, positions[2][0].x, positions[2][0].y, "Threshold to turn Red: ");
-  textAndSliderBottomCenter(greenThresholdSlider, positions[2][1].x, positions[2][1].y, "Threshold to turn Green: ");
-  textAndSliderBottomCenter(blueThresholdSlider, positions[2][2].x, positions[2][2].y, "Threshold to turn Blue: ");
+  thresholdToggleBlackButton.position(positions[2][0].x - thresholdToggleBlackButton.width - buttonMargin, positions[2][0].y);
+  thresholdToggleWhiteButton.position(positions[2][0].x - thresholdToggleWhiteButton.width - buttonMargin, positions[2][0].y + thresholdToggleBlackButton.height + buttonMargin);
+  textAndSliderBottomCenter(redThresholdSlider, positions[2][0].x, positions[2][0].y, "Red Threshold: ");
+  textAndSliderBottomCenter(greenThresholdSlider, positions[2][1].x, positions[2][1].y, "Green Threshold: ");
+  textAndSliderBottomCenter(blueThresholdSlider, positions[2][2].x, positions[2][2].y, "Blue Threshold: ");
   // Row 4
   textAndSliderBottomLeft(cyanSlider, inputFeed.width * 0.55, positions[3][1].x, positions[3][1].y, "Cyan: ", "%");
   textAndSliderBottomLeft(magentaSlider, inputFeed.width * 0.55, positions[3][1].x, positions[3][1].y + cyanSlider.height * 1.2, "Magenta: ", "%");
@@ -316,12 +316,15 @@ function draw() {
   textAndSliderBottomLeft(satSlider, inputFeed.width * 0.45, positions[3][2].x, positions[3][2].y + hueSlider.height * 1.2, "Sat.: ", "%");
   textAndSliderBottomLeft(valSlider, inputFeed.width * 0.45, positions[3][2].x, positions[3][2].y + hueSlider.height * 1.2 + satSlider.height * 1.2, "Value: ", "%");
   // Row 5, beside capture left
-  detectDefaultButton.position(positions[4][0].x - detectDefaultButton.width - detectDefaultButton.height / 4, positions[4][0].y);
-  detectGreyButton.position(positions[4][0].x - detectGreyButton.width - detectGreyButton.height / 4, detectDefaultButton.y + detectDefaultButton.height * 1.25);
-  detectBlurButton.position(positions[4][0].x - detectBlurButton.width - detectBlurButton.height / 4, detectGreyButton.y + detectGreyButton.height * 1.25);
-  detectConvertButton.position(positions[4][0].x - detectConvertButton.width - detectConvertButton.height / 4, detectBlurButton.y + detectBlurButton.height * 1.25);
-  detectPixelButton.position(positions[4][0].x - detectPixelButton.width - detectPixelButton.height / 4, detectConvertButton.y + detectConvertButton.height * 1.25);
-  detectNegativeButton.position(positions[4][0].x - detectNegativeButton.width - detectNegativeButton.height / 4, detectPixelButton.y + detectPixelButton.height * 1.25);
+  for (let i = 0; i < 6; i++) {
+    text(i + 1, positions[4][0].x - marginWidth, positions[4][0].y + buttonMargin * 1.5 + i * (detectDefaultButton.height + buttonMargin));
+  }
+  detectDefaultButton.position(positions[4][0].x - detectDefaultButton.width - buttonMargin * 2.5, positions[4][0].y);
+  detectGreyButton.position(positions[4][0].x - detectGreyButton.width - buttonMargin * 2.5, detectDefaultButton.y + detectDefaultButton.height + buttonMargin);
+  detectBlurButton.position(positions[4][0].x - detectBlurButton.width - buttonMargin * 2.5, detectGreyButton.y + detectGreyButton.height + buttonMargin);
+  detectConvertButton.position(positions[4][0].x - detectConvertButton.width - buttonMargin * 2.5, detectBlurButton.y + detectBlurButton.height + buttonMargin);
+  detectPixelButton.position(positions[4][0].x - detectPixelButton.width - buttonMargin * 2.5, detectConvertButton.y + detectConvertButton.height + buttonMargin);
+  detectNegativeButton.position(positions[4][0].x - detectNegativeButton.width - buttonMargin * 2.5, detectPixelButton.y + detectPixelButton.height + buttonMargin);
   // Row 5, below capture left
   textAndSliderBottomLeft(detectDefaultSlider, inputFeed.width * 0.7, positions[4][0].x, positions[4][0].y, "Box thickness: ", "px");
   textAndSliderBottomLeft(detectBlurSlider, inputFeed.width * 0.4, positions[4][0].x, positions[4][0].y + detectDefaultSlider.height * 1.2, "Blur: ", "x");
@@ -356,6 +359,40 @@ function draw() {
 
 function windowResized() {
   resizeCanvas(windowWidth, windowHeight);
+}
+
+function keyPressed() {
+  // Number 1 to 6
+  switch (keyCode) {
+    default: // Any key
+      setAllEffectsFalse();
+      detectDefaultEffect = true;
+      break;
+    case 49:
+      setAllEffectsFalse();
+      detectDefaultEffect = true;
+      break;
+    case 50:
+      setAllEffectsFalse();
+      detectGreyEffect = true;
+      break;
+    case 51:
+      setAllEffectsFalse();
+      detectBlurEffect = true;
+      break;
+    case 52:
+      setAllEffectsFalse();
+      detectConvertEffect = true;
+      break;
+    case 53:
+      setAllEffectsFalse();
+      detectPixelEffect = true;
+      break;
+    case 54:
+      setAllEffectsFalse();
+      detectNegativeEffect = true;
+      break;
+  }
 }
 
 // General helper functions
@@ -596,11 +633,11 @@ function captureEditThresholdB(src, x, y, w, h) {
 function createThresholdForRGB(slider, chanFocused, chanSide1, chanSide2) {
   if (chanFocused > slider.value()) {
     chanFocused = 255;
-    if (thresholdToggleIsWhite) {
+    if (thresholdToWhite) {
       chanSide1 = 255;
       chanSide2 = 255;
     }
-  } else thresholdToggleIsBlack ? (chanFocused = 0) : (chanFocused = chanFocused);
+  } else thresholdShowPureBlack ? (chanFocused = 0) : (chanFocused = chanFocused);
 
   return [chanFocused, chanSide1, chanSide2];
 }
