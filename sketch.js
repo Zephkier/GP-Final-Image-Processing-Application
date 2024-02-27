@@ -5,6 +5,9 @@ let setHeight = 120; // This is the minimum, original = 480
 let marginWidth = 20; // Recommended minimum = 20
 let marginHeight = 50; // Recommended minimum = 40
 let positions = []; // positions to end up like this: [ [{x,y}, {x,y}, {x,y}], repeat 4 more times ]
+let hoverToggleButton;
+let hoverEffectIsOn = true;
+let exportButton;
 
 // ----- For picture-taking and resuming video ----- //
 let inputFeed;
@@ -29,7 +32,7 @@ let valSlider;
 
 // For threshold
 let thresholdToggleButton;
-let thresholdToggleIsNowBlack = true;
+let thresholdToggleIsBlack = true;
 
 // For face detection
 let detector;
@@ -53,6 +56,7 @@ let detectBlurSlider;
 let detectPixelSlider;
 
 function setup() {
+  // ----- General / Defaults ----- //
   createCanvas(windowWidth, windowHeight);
   textAlign(CENTER);
   fill(255);
@@ -62,6 +66,18 @@ function setup() {
   capture = createCapture(VIDEO);
   capture.size(setWidth, setHeight);
   capture.hide();
+
+  hoverToggleButton = createButton("Toggle Cursor Hover:<br>On"); // Use "<br>" instead of "\n"
+  hoverToggleButton.mousePressed(function () {
+    hoverEffectIsOn = !hoverEffectIsOn;
+    if (hoverEffectIsOn) hoverToggleButton.html("Toggle Cursor Hover:<br>On");
+    else hoverToggleButton.html("Toggle Cursor Hover:<br>Off");
+  });
+
+  exportButton = createButton("Export Canvas");
+  exportButton.mousePressed(function () {
+    saveCanvas("My p5.js Photo Booth", "png");
+  });
 
   // ----- For picture-taking and resuming video ----- //
   // Set inputFeed upon startup
@@ -111,11 +127,11 @@ function setup() {
   }
 
   // For threshold
-  thresholdToggleButton = createButton("Toggle Black:\nOn");
+  thresholdToggleButton = createButton("Toggle Black:<br>On"); // Use "<br>" instead of "\n"
   thresholdToggleButton.mousePressed(function () {
-    thresholdToggleIsNowBlack = !thresholdToggleIsNowBlack;
-    if (thresholdToggleIsNowBlack) thresholdToggleButton.html("Toggle Black:\nOn");
-    else thresholdToggleButton.html("Toggle Black:\nOff");
+    thresholdToggleIsBlack = !thresholdToggleIsBlack;
+    if (thresholdToggleIsBlack) thresholdToggleButton.html("Toggle Black:<br>On");
+    else thresholdToggleButton.html("Toggle Black:<br>Off");
   });
 
   // For face detection
@@ -192,63 +208,56 @@ function draw() {
     }
   }
 
-  // Button positions
-  let buttonPosX = positions[0][2].x + capture.width / 2;
-  let buttonPosY = positions[0][2].y;
-  if (!pictureTaken) pictureButton.position(buttonPosX - pictureButton.width / 2, buttonPosY);
-  else pictureButton.position(buttonPosX - pictureButton.width / 2 - 4, buttonPosY); // Move leftwards slightly due to longer button text
-  videoButton.position(buttonPosX - videoButton.width / 2, buttonPosY + pictureButton.height * 1.5);
+  // ----- Buttons at empty space in capture grid ----- //
+  let buttonPosX = positions[0][2].x + inputFeed.width / 2;
+
+  if (!pictureTaken) pictureButton.position(buttonPosX - pictureButton.width / 2, positions[0][2].y);
+  else pictureButton.position(buttonPosX - pictureButton.width / 2 - 4, positions[0][2].y); // "- 4" to move it leftwards very slightly due to longer button text
+
+  videoButton.position(buttonPosX - videoButton.width / 2, pictureButton.y + pictureButton.height + pictureButton.height / 2);
+
+  hoverToggleButton.position(buttonPosX - hoverToggleButton.width / 2, videoButton.y + videoButton.height + videoButton.height / 2);
+
+  exportButton.position(buttonPosX - exportButton.width / 2, hoverToggleButton.y + hoverToggleButton.height + videoButton.height / 2);
 
   // ----- Capture grid ----- //
   // Row 1
   image(inputFeed, positions[0][0].x, positions[0][0].y, setWidth, setHeight);
-  hoverEffectAndText(positions[0][0].x, positions[0][0].y, capture.width, capture.height, "Webcam\nImage", 1);
 
   captureEditGrey(inputFeed, positions[0][1].x, positions[0][1].y, setWidth, setHeight);
-  hoverEffectAndText(positions[0][1].x, positions[0][1].y, capture.width, capture.height, "Greyscale\nand\nBrightness at " + brightSlider.value() + "%", 2);
   textAndSliderBottomCenter(brightSlider, positions[0][1].x, positions[0][1].y, "Brightness", "%");
 
   // Row 2
   captureEditR(inputFeed, positions[1][0].x, positions[1][0].y, setWidth, setHeight);
-  hoverEffectAndText(positions[1][0].x, positions[1][0].y, capture.width, capture.height, "Red Channel", 0);
   textAndSliderBottomCenter(redSlider, positions[1][0].x, positions[1][0].y, "Red Value");
 
   captureEditG(inputFeed, positions[1][1].x, positions[1][1].y, setWidth, setHeight);
-  hoverEffectAndText(positions[1][1].x, positions[1][1].y, capture.width, capture.height, "Green Channel", 0);
   textAndSliderBottomCenter(greenSlider, positions[1][1].x, positions[1][1].y, "Green Value");
 
   captureEditB(inputFeed, positions[1][2].x, positions[1][2].y, setWidth, setHeight);
-  hoverEffectAndText(positions[1][2].x, positions[1][2].y, capture.width, capture.height, "Blue Channel", 0);
   textAndSliderBottomCenter(blueSlider, positions[1][2].x, positions[1][2].y, "Blue Value");
 
   // Row 3
   thresholdToggleButton.position(positions[2][0].x - thresholdToggleButton.width - thresholdToggleButton.height / 4, positions[2][0].y + inputFeed.height / 2 - thresholdToggleButton.height / 2);
 
   captureEditThresholdR(inputFeed, positions[2][0].x, positions[2][0].y, setWidth, setHeight);
-  hoverEffectAndText(positions[2][0].x, positions[2][0].y, capture.width, capture.height, "Threshold\nImage", 1);
   textAndSliderBottomCenter(redThresholdSlider, positions[2][0].x, positions[2][0].y, "Threshold to turn Red");
 
   captureEditThresholdG(inputFeed, positions[2][1].x, positions[2][1].y, setWidth, setHeight);
-  hoverEffectAndText(positions[2][1].x, positions[2][1].y, capture.width, capture.height, "Threshold\nImage", 1);
   textAndSliderBottomCenter(greenThresholdSlider, positions[2][1].x, positions[2][1].y, "Threshold to turn Green");
 
   captureEditThresholdB(inputFeed, positions[2][2].x, positions[2][2].y, setWidth, setHeight);
-  hoverEffectAndText(positions[2][2].x, positions[2][2].y, capture.width, capture.height, "Threshold\nImage", 1);
   textAndSliderBottomCenter(blueThresholdSlider, positions[2][2].x, positions[2][2].y, "Threshold to turn Blue");
 
   // Row 4
   captureEditRepeat(inputFeed, positions[3][0].x, positions[3][0].y, setWidth, setHeight);
-  hoverEffectAndText(positions[3][0].x, positions[3][0].y, capture.width, capture.height, "Webcam\nImage\n\n(Repeat)", 3);
 
   captureEditColourSpace1(inputFeed, positions[3][1].x, positions[3][1].y, setWidth, setHeight);
-  hoverEffectAndText(positions[3][1].x, positions[3][1].y, capture.width, capture.height, "Colour Space\n(Conversion)\n1\n\nRGB to CMY", 4);
 
   captureEditColourSpace2(inputFeed, positions[3][2].x, positions[3][2].y, setWidth, setHeight);
-  hoverEffectAndText(positions[3][2].x, positions[3][2].y, capture.width, capture.height, "Colour Space\n(Conversion)\n2\n\nRGB to HSV", 4);
 
   // Row 5
   captureEditFaceDetect(inputFeed, positions[4][0].x, positions[4][0].y, setWidth, setHeight);
-  hoverEffectAndText(positions[4][0].x, positions[4][0].y, capture.width, capture.height, "Face Detection\nand\nReplaced\nFace Images", 3);
   // Sliders
   textAndSliderLeft(detectDefaultSlider, positions[4][0].x, positions[4][0].y, "Box thickness", "px");
   textAndSliderLeft(detectBlurSlider, positions[4][0].x, positions[4][0].y + detectDefaultSlider.height * 2.5, "Blur", "x");
@@ -263,16 +272,32 @@ function draw() {
   detectNegativeButton.position(positions[4][0].x + inputFeed.width - detectNegativeButton.width, detectPixelButton.y + detectPixelButton.height);
 
   captureEditColourSpace1Segment(inputFeed, positions[4][1].x, positions[4][1].y, setWidth, setHeight);
-  hoverEffectAndText(positions[4][1].x, positions[4][1].y, capture.width, capture.height, "Segmented Image\nfrom\nColour Space\n(Conversion)\n1", 4);
   textAndSliderBottomLeft(cyanSlider, inputFeed.width * 0.55, positions[4][1].x, positions[4][1].y, "Cyan", "%");
   textAndSliderBottomLeft(magentaSlider, inputFeed.width * 0.55, positions[4][1].x, positions[4][1].y + cyanSlider.height * 1.2, "Magenta", "%");
   textAndSliderBottomLeft(yellowSlider, inputFeed.width * 0.55, positions[4][1].x, positions[4][1].y + cyanSlider.height * 1.2 + magentaSlider.height * 1.2, "Yellow", "%");
 
   captureEditColourSpace2Segment(inputFeed, positions[4][2].x, positions[4][2].y, setWidth, setHeight);
-  hoverEffectAndText(positions[4][2].x, positions[4][2].y, capture.width, capture.height, "Segmented Image\nfrom\nColour Space\n(Conversion)\n2", 4);
   textAndSliderBottomLeft(hueSlider, inputFeed.width * 0.45, positions[4][2].x, positions[4][2].y, "Hue", "°");
   textAndSliderBottomLeft(satSlider, inputFeed.width * 0.45, positions[4][2].x, positions[4][2].y + hueSlider.height * 1.2, "Sat.", "%");
   textAndSliderBottomLeft(valSlider, inputFeed.width * 0.45, positions[4][2].x, positions[4][2].y + hueSlider.height * 1.2 + satSlider.height * 1.2, "Value", "%");
+
+  // ----- Capture grid hover effect ----- //
+  if (hoverEffectIsOn) {
+    hoverEffect(positions[0][0].x, positions[0][0].y, capture.width, capture.height, "Webcam\nImage", 1);
+    hoverEffect(positions[0][1].x, positions[0][1].y, capture.width, capture.height, "Greyscale\nand\nBrightness at " + brightSlider.value() + "%", 2);
+    hoverEffect(positions[1][0].x, positions[1][0].y, capture.width, capture.height, "Red Channel", 0);
+    hoverEffect(positions[1][1].x, positions[1][1].y, capture.width, capture.height, "Green Channel", 0);
+    hoverEffect(positions[1][2].x, positions[1][2].y, capture.width, capture.height, "Blue Channel", 0);
+    hoverEffect(positions[2][0].x, positions[2][0].y, capture.width, capture.height, "Threshold\nImage", 1);
+    hoverEffect(positions[2][1].x, positions[2][1].y, capture.width, capture.height, "Threshold\nImage", 1);
+    hoverEffect(positions[2][2].x, positions[2][2].y, capture.width, capture.height, "Threshold\nImage", 1);
+    hoverEffect(positions[3][0].x, positions[3][0].y, capture.width, capture.height, "Webcam\nImage\n\n(Repeat)", 3);
+    hoverEffect(positions[3][1].x, positions[3][1].y, capture.width, capture.height, "Colour Space\n1\n\nConversion:\nRGB to CMY", 4);
+    hoverEffect(positions[3][2].x, positions[3][2].y, capture.width, capture.height, "Colour Space\n2\n\nConversion:\nRGB to HSV", 4);
+    hoverEffect(positions[4][0].x, positions[4][0].y, capture.width, capture.height, "Face Detection\n\nand\n\nReplaced\nFace Images", 5);
+    hoverEffect(positions[4][1].x, positions[4][1].y, capture.width, capture.height, "Threshold\nImage\n\nfrom\nColour Space\n1", 5);
+    hoverEffect(positions[4][2].x, positions[4][2].y, capture.width, capture.height, "Threshold\nImage\n\nfrom\nColour Space\n2", 5);
+  }
 }
 
 function windowResized() {
@@ -280,7 +305,7 @@ function windowResized() {
 }
 
 // Helper functions
-function hoverEffectAndText(x, y, w, h, string, linebreakCount) {
+function hoverEffect(x, y, w, h, string, linebreakCount) {
   // Effect
   if (
     // format
@@ -475,7 +500,7 @@ function captureEditThresholdR(src, x, y, w, h) {
       let chanR = captureCopy.pixels[index + 0];
       let chanG = 0;
       let chanB = 0;
-      if (chanR > redThresholdSlider.value()) thresholdToggleIsNowBlack ? (chanR = 0) : (chanR = chanR);
+      if (chanR > redThresholdSlider.value()) thresholdToggleIsBlack ? (chanR = 0) : (chanR = chanR);
       else chanR = 255;
       captureCopy.pixels[index + 0] = chanR;
       captureCopy.pixels[index + 1] = chanG;
@@ -496,7 +521,7 @@ function captureEditThresholdG(src, x, y, w, h) {
       let chanR = 0;
       let chanG = captureCopy.pixels[index + 1];
       let chanB = 0;
-      if (chanG > greenThresholdSlider.value()) thresholdToggleIsNowBlack ? (chanG = 0) : (chanG = chanG);
+      if (chanG > greenThresholdSlider.value()) thresholdToggleIsBlack ? (chanG = 0) : (chanG = chanG);
       else chanG = 255;
       captureCopy.pixels[index + 0] = chanR;
       captureCopy.pixels[index + 1] = chanG;
@@ -517,7 +542,7 @@ function captureEditThresholdB(src, x, y, w, h) {
       let chanR = 0;
       let chanG = 0;
       let chanB = captureCopy.pixels[index + 2];
-      if (chanB > blueThresholdSlider.value()) thresholdToggleIsNowBlack ? (chanB = 0) : (chanB = chanB);
+      if (chanB > blueThresholdSlider.value()) thresholdToggleIsBlack ? (chanB = 0) : (chanB = chanB);
       else chanB = 255;
       captureCopy.pixels[index + 0] = chanR;
       captureCopy.pixels[index + 1] = chanG;
