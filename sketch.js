@@ -39,8 +39,10 @@ let satSlider;
 let valSlider;
 
 // For threshold
-let thresholdToggleButton;
+let thresholdToggleBlackButton;
 let thresholdToggleIsBlack = true;
+let thresholdToggleWhiteButton;
+let thresholdToggleIsWhite = false;
 
 // For face detection
 let detector;
@@ -150,11 +152,18 @@ function setup() {
   }
 
   // ----- For threshold ----- //
-  thresholdToggleButton = createButton("Toggle Black:<br>On"); // Use "<br>" instead of "\n"
-  thresholdToggleButton.mousePressed(function () {
+  thresholdToggleBlackButton = createButton("Toggle Black:<br>On"); // Use "<br>" instead of "\n"
+  thresholdToggleBlackButton.mousePressed(function () {
     thresholdToggleIsBlack = !thresholdToggleIsBlack;
-    if (thresholdToggleIsBlack) thresholdToggleButton.html("Toggle Black:<br>On");
-    else thresholdToggleButton.html("Toggle Black:<br>Off");
+    if (thresholdToggleIsBlack) thresholdToggleBlackButton.html("Toggle Black:<br>On");
+    else thresholdToggleBlackButton.html("Toggle Black:<br>Off");
+  });
+
+  thresholdToggleWhiteButton = createButton("Toggle White:<br>On"); // Use "<br>" instead of "\n"
+  thresholdToggleWhiteButton.mousePressed(function () {
+    thresholdToggleIsWhite = !thresholdToggleIsWhite;
+    if (thresholdToggleIsWhite) thresholdToggleWhiteButton.html("Toggle White:<br>On");
+    else thresholdToggleWhiteButton.html("Toggle White:<br>Off");
   });
 
   // ----- For face detection ----- //
@@ -210,7 +219,7 @@ function setup() {
   detectPixelSlider.style("width", capture.width + "px");
 
   // ----- For exporting: update this important array at the end (note that unfreezeButton is not inside) ----- //
-  allButtonsAndSliders = [hoverToggleButton, exportButton, exportDelaySlider, freezeButton, unfreezeButton, switchToImageButton, brightSlider, redSlider, greenSlider, blueSlider, redThresholdSlider, greenThresholdSlider, blueThresholdSlider, cyanSlider, magentaSlider, yellowSlider, hueSlider, satSlider, valSlider, thresholdToggleButton, detectDefaultButton, detectGreyButton, detectBlurButton, detectConvertButton, detectPixelButton, detectNegativeButton, detectDefaultSlider, detectBlurSlider, detectPixelSlider];
+  allButtonsAndSliders = [hoverToggleButton, exportButton, exportDelaySlider, freezeButton, unfreezeButton, switchToImageButton, brightSlider, redSlider, greenSlider, blueSlider, redThresholdSlider, greenThresholdSlider, blueThresholdSlider, cyanSlider, magentaSlider, yellowSlider, hueSlider, satSlider, valSlider, thresholdToggleBlackButton, thresholdToggleWhiteButton, detectDefaultButton, detectGreyButton, detectBlurButton, detectConvertButton, detectPixelButton, detectNegativeButton, detectDefaultSlider, detectBlurSlider, detectPixelSlider];
 }
 
 function draw() {
@@ -282,7 +291,8 @@ function draw() {
   textAndSliderBottomCenter(greenSlider, positions[1][1].x, positions[1][1].y, "Green Value: ");
   textAndSliderBottomCenter(blueSlider, positions[1][2].x, positions[1][2].y, "Blue Value: ");
   // Row 3
-  thresholdToggleButton.position(positions[2][0].x - thresholdToggleButton.width - thresholdToggleButton.height / 4, positions[2][0].y + inputFeed.height / 2 - thresholdToggleButton.height / 2);
+  thresholdToggleBlackButton.position(positions[2][0].x - thresholdToggleBlackButton.width - thresholdToggleBlackButton.height / 4, positions[2][0].y);
+  thresholdToggleWhiteButton.position(positions[2][0].x - thresholdToggleWhiteButton.width - thresholdToggleWhiteButton.height / 4, positions[2][0].y + thresholdToggleBlackButton.height + buttonMargin);
   textAndSliderBottomCenter(redThresholdSlider, positions[2][0].x, positions[2][0].y, "Threshold to turn Red: ");
   textAndSliderBottomCenter(greenThresholdSlider, positions[2][1].x, positions[2][1].y, "Threshold to turn Green: ");
   textAndSliderBottomCenter(blueThresholdSlider, positions[2][2].x, positions[2][2].y, "Threshold to turn Blue: ");
@@ -434,11 +444,10 @@ function captureEditGrey(src, x, y, w, h) {
       let chanB = captureCopy.pixels[index + 2];
       let grey = (chanR + chanG + chanB) / 3;
       let bright = brightSlider.value() / 100;
-      // "Prevent pixel intensity from going beyond 255"
-      let output = min(grey * bright, 255);
-      captureCopy.pixels[index + 0] = output;
-      captureCopy.pixels[index + 1] = output;
-      captureCopy.pixels[index + 2] = output;
+      let chanOutput = constrain(grey * bright, 0, 255); // "5. Prevent pixel intensity from going beyond 255"
+      captureCopy.pixels[index + 0] = chanOutput;
+      captureCopy.pixels[index + 1] = chanOutput;
+      captureCopy.pixels[index + 2] = chanOutput;
     }
   }
   captureCopy.updatePixels();
@@ -515,7 +524,13 @@ function captureEditThresholdR(src, x, y, w, h) {
       let chanG = 0;
       let chanB = 0;
       if (chanR > redThresholdSlider.value()) thresholdToggleIsBlack ? (chanR = 0) : (chanR = chanR);
-      else chanR = 255;
+      else {
+        chanR = 255;
+        if (thresholdToggleIsWhite) {
+          chanG = 255;
+          chanB = 255;
+        }
+      }
       captureCopy.pixels[index + 0] = chanR;
       captureCopy.pixels[index + 1] = chanG;
       captureCopy.pixels[index + 2] = chanB;
@@ -536,7 +551,13 @@ function captureEditThresholdG(src, x, y, w, h) {
       let chanG = captureCopy.pixels[index + 1];
       let chanB = 0;
       if (chanG > greenThresholdSlider.value()) thresholdToggleIsBlack ? (chanG = 0) : (chanG = chanG);
-      else chanG = 255;
+      else {
+        chanG = 255;
+        if (thresholdToggleIsWhite) {
+          chanB = 255;
+          chanR = 255;
+        }
+      }
       captureCopy.pixels[index + 0] = chanR;
       captureCopy.pixels[index + 1] = chanG;
       captureCopy.pixels[index + 2] = chanB;
@@ -557,7 +578,13 @@ function captureEditThresholdB(src, x, y, w, h) {
       let chanG = 0;
       let chanB = captureCopy.pixels[index + 2];
       if (chanB > blueThresholdSlider.value()) thresholdToggleIsBlack ? (chanB = 0) : (chanB = chanB);
-      else chanB = 255;
+      else {
+        chanB = 255;
+        if (thresholdToggleIsWhite) {
+          chanR = 255;
+          chanG = 255;
+        }
+      }
       captureCopy.pixels[index + 0] = chanR;
       captureCopy.pixels[index + 1] = chanG;
       captureCopy.pixels[index + 2] = chanB;
