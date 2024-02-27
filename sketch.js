@@ -15,10 +15,13 @@ let exportDelaySlider;
 let exportingNow = false;
 let allButtonsAndSliders;
 
-// For (un)freezing frame
+// For chaning inputFeed (aka. (un)freezing frame, using image)
 let inputFeed;
 let freezeButton;
 let unfreezeButton;
+let incomingImage;
+let switchToImageButton;
+let showUnfreezeButton = false;
 
 // For captures
 let brightSlider;
@@ -60,6 +63,10 @@ let detectDefaultSlider;
 let detectBlurSlider;
 let detectPixelSlider;
 
+function preload() {
+  incomingImage = loadImage("test0.png");
+}
+
 function setup() {
   // ----- General ----- //
   createCanvas(windowWidth, windowHeight);
@@ -98,19 +105,27 @@ function setup() {
   // Button
   freezeButton = createButton("Freeze frame");
   unfreezeButton = createButton("Unfreeze frame").hide();
+  switchToImageButton = createButton("Switch to<br>Preloaded Image");
 
   freezeButton.mousePressed(function () {
     let picture = createImage(capture.width, capture.height);
     picture.copy(capture, 0, 0, capture.width, capture.height, 0, 0, capture.width, capture.height);
     inputFeed = picture;
     freezeButton.html("Freeze again!");
-    unfreezeButton.show();
+    showUnfreezeButton = true;
   });
 
   unfreezeButton.mousePressed(function () {
     inputFeed = capture;
     freezeButton.html("Freeze frame");
-    unfreezeButton.hide();
+    showUnfreezeButton = false;
+  });
+
+  switchToImageButton.mousePressed(function () {
+    let incomingImageCopy = createImage(capture.width, capture.height);
+    incomingImageCopy.copy(incomingImage, 0, 0, incomingImage.width, incomingImage.height, 0, 0, capture.width, capture.height);
+    inputFeed = incomingImageCopy;
+    showUnfreezeButton = true;
   });
 
   // ----- For captures ----- //
@@ -195,7 +210,7 @@ function setup() {
   detectPixelSlider.style("width", capture.width + "px");
 
   // ----- For exporting: update this important array at the end (note that unfreezeButton is not inside) ----- //
-  allButtonsAndSliders = [hoverToggleButton, exportButton, exportDelaySlider, freezeButton, brightSlider, redSlider, greenSlider, blueSlider, redThresholdSlider, greenThresholdSlider, blueThresholdSlider, cyanSlider, magentaSlider, yellowSlider, hueSlider, satSlider, valSlider, thresholdToggleButton, detectDefaultButton, detectGreyButton, detectBlurButton, detectConvertButton, detectPixelButton, detectNegativeButton, detectDefaultSlider, detectBlurSlider, detectPixelSlider];
+  allButtonsAndSliders = [hoverToggleButton, exportButton, exportDelaySlider, freezeButton, unfreezeButton, switchToImageButton, brightSlider, redSlider, greenSlider, blueSlider, redThresholdSlider, greenThresholdSlider, blueThresholdSlider, cyanSlider, magentaSlider, yellowSlider, hueSlider, satSlider, valSlider, thresholdToggleButton, detectDefaultButton, detectGreyButton, detectBlurButton, detectConvertButton, detectPixelButton, detectNegativeButton, detectDefaultSlider, detectBlurSlider, detectPixelSlider];
 }
 
 function draw() {
@@ -226,13 +241,17 @@ function draw() {
   exportButton.position(positions[0][2].x, positions[0][2].y);
   textAndSliderBottomLeft(exportDelaySlider, inputFeed.width * 0.45, exportButton.x, exportButton.y - inputFeed.height + exportButton.height + buttonMargin, "Export delay\n", " sec");
   hoverToggleButton.position(exportButton.x, exportDelaySlider.y + buttonMargin * 3.5);
+  switchToImageButton.position(hoverToggleButton.x + hoverToggleButton.width + buttonMargin, hoverToggleButton.y);
   freezeButton.position(exportButton.x, hoverToggleButton.y + hoverToggleButton.height + buttonMargin);
-  unfreezeButton.position(exportButton.x + freezeButton.width * 1.15, hoverToggleButton.y + hoverToggleButton.height + buttonMargin);
+  unfreezeButton.position(exportButton.x + freezeButton.width + buttonMargin, hoverToggleButton.y + hoverToggleButton.height + buttonMargin);
 
-  // ----- When exporting, hide all HTML elements ----- //
+  // When exporting, hide all HTML elements
   for (let i = 0; i < allButtonsAndSliders.length; i++) {
     exportingNow ? allButtonsAndSliders[i].hide() : allButtonsAndSliders[i].show();
   }
+
+  // Must be below 'for' loop above
+  showUnfreezeButton && !exportingNow ? unfreezeButton.show() : unfreezeButton.hide();
 
   // ----- Capture grid itself ----- //
   // Row 1
