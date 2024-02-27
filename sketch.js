@@ -37,6 +37,12 @@ let yellowSlider;
 let hueSlider;
 let satSlider;
 let valSlider;
+let cyanThresholdSlider;
+let magentaThresholdSlider;
+let yellowThresholdSlider;
+let hueThresholdSlider;
+let satThresholdSlider;
+let valThresholdSlider;
 
 // For threshold
 let thresholdToggleBlackButton;
@@ -144,9 +150,15 @@ function setup() {
   hueSlider = createSlider(0, 360, 360, 1);
   satSlider = createSlider(0, 100, 100, 1);
   valSlider = createSlider(0, 100, 100, 1);
+  cyanThresholdSlider = createSlider(0, 100, 66, 1);
+  magentaThresholdSlider = createSlider(0, 100, 66, 1);
+  yellowThresholdSlider = createSlider(0, 100, 66, 1);
+  hueThresholdSlider = createSlider(0, 360, 180, 1);
+  satThresholdSlider = createSlider(0, 100, 33, 1);
+  valThresholdSlider = createSlider(0, 100, 33, 1);
 
   let sliders = [];
-  sliders.push(brightSlider, redSlider, greenSlider, blueSlider, redThresholdSlider, greenThresholdSlider, blueThresholdSlider, cyanSlider, magentaSlider, yellowSlider, hueSlider, satSlider, valSlider);
+  sliders.push(brightSlider, redSlider, greenSlider, blueSlider, redThresholdSlider, greenThresholdSlider, blueThresholdSlider, cyanSlider, magentaSlider, yellowSlider, hueSlider, satSlider, valSlider, cyanThresholdSlider, magentaThresholdSlider, yellowThresholdSlider, hueThresholdSlider, satThresholdSlider, valThresholdSlider);
   for (let i = 0; i < sliders.length; i++) {
     sliders[i].style("width", capture.width + "px"); // Set slider's width to be capture's width by default
   }
@@ -219,7 +231,7 @@ function setup() {
   detectPixelSlider.style("width", capture.width + "px");
 
   // ----- For exporting: update this important array at the end (note that unfreezeButton is not inside) ----- //
-  allButtonsAndSliders = [hoverToggleButton, exportButton, exportDelaySlider, freezeButton, unfreezeButton, switchToImageButton, brightSlider, redSlider, greenSlider, blueSlider, redThresholdSlider, greenThresholdSlider, blueThresholdSlider, cyanSlider, magentaSlider, yellowSlider, hueSlider, satSlider, valSlider, thresholdToggleBlackButton, thresholdToggleWhiteButton, detectDefaultButton, detectGreyButton, detectBlurButton, detectConvertButton, detectPixelButton, detectNegativeButton, detectDefaultSlider, detectBlurSlider, detectPixelSlider];
+  allButtonsAndSliders = [hoverToggleButton, exportButton, exportDelaySlider, freezeButton, unfreezeButton, switchToImageButton, brightSlider, redSlider, greenSlider, blueSlider, redThresholdSlider, greenThresholdSlider, blueThresholdSlider, cyanSlider, magentaSlider, yellowSlider, hueSlider, satSlider, valSlider, cyanThresholdSlider, magentaThresholdSlider, yellowThresholdSlider, hueThresholdSlider, satThresholdSlider, valThresholdSlider, thresholdToggleBlackButton, thresholdToggleWhiteButton, detectDefaultButton, detectGreyButton, detectBlurButton, detectConvertButton, detectPixelButton, detectNegativeButton, detectDefaultSlider, detectBlurSlider, detectPixelSlider];
 }
 
 function draw() {
@@ -303,7 +315,7 @@ function draw() {
   textAndSliderBottomLeft(hueSlider, inputFeed.width * 0.45, positions[3][2].x, positions[3][2].y, "Hue: ", "°");
   textAndSliderBottomLeft(satSlider, inputFeed.width * 0.45, positions[3][2].x, positions[3][2].y + hueSlider.height * 1.2, "Sat.: ", "%");
   textAndSliderBottomLeft(valSlider, inputFeed.width * 0.45, positions[3][2].x, positions[3][2].y + hueSlider.height * 1.2 + satSlider.height * 1.2, "Value: ", "%");
-  // Row 5
+  // Row 5, beside capture left
   detectDefaultButton.position(positions[4][0].x - detectDefaultButton.width - detectDefaultButton.height / 4, positions[4][0].y);
   detectGreyButton.position(positions[4][0].x - detectGreyButton.width - detectGreyButton.height / 4, detectDefaultButton.y + detectDefaultButton.height * 1.25);
   detectBlurButton.position(positions[4][0].x - detectBlurButton.width - detectBlurButton.height / 4, detectGreyButton.y + detectGreyButton.height * 1.25);
@@ -314,6 +326,14 @@ function draw() {
   textAndSliderBottomLeft(detectDefaultSlider, inputFeed.width * 0.7, positions[4][0].x, positions[4][0].y, "Box thickness: ", "px");
   textAndSliderBottomLeft(detectBlurSlider, inputFeed.width * 0.4, positions[4][0].x, positions[4][0].y + detectDefaultSlider.height * 1.2, "Blur: ", "x");
   textAndSliderBottomLeft(detectPixelSlider, inputFeed.width * 0.4, positions[4][0].x, positions[4][0].y + detectDefaultSlider.height * 1.2 + detectBlurSlider.height * 1.2, "Pixel: ", "px");
+  // Row 5, below capture middle
+  textAndSliderBottomLeft(cyanThresholdSlider, inputFeed.width * 0.65, positions[4][1].x, positions[4][1].y, "C Threshold: ", "%");
+  textAndSliderBottomLeft(magentaThresholdSlider, inputFeed.width * 0.65, positions[4][1].x, positions[4][1].y + detectDefaultSlider.height * 1.2, "M Threshold: ", "%");
+  textAndSliderBottomLeft(yellowThresholdSlider, inputFeed.width * 0.65, positions[4][1].x, positions[4][1].y + detectDefaultSlider.height * 1.2 + detectBlurSlider.height * 1.2, "Y Threshold: ", "%");
+  // Row 5, below capture right
+  textAndSliderBottomLeft(hueThresholdSlider, inputFeed.width * 0.65, positions[4][2].x, positions[4][2].y, "H Threshold: ", "%");
+  textAndSliderBottomLeft(satThresholdSlider, inputFeed.width * 0.65, positions[4][2].x, positions[4][2].y + detectDefaultSlider.height * 1.2, "S Threshold: ", "%");
+  textAndSliderBottomLeft(valThresholdSlider, inputFeed.width * 0.65, positions[4][2].x, positions[4][2].y + detectDefaultSlider.height * 1.2 + detectBlurSlider.height * 1.2, "V Threshold: ", "%");
 
   // ----- Capture grid hover effect ----- //
   if (hoverEffectIsOn) {
@@ -522,17 +542,10 @@ function captureEditThresholdR(src, x, y, w, h) {
       let chanR = captureCopy.pixels[index + 0];
       let chanG = 0;
       let chanB = 0;
-      if (chanR > redThresholdSlider.value()) thresholdToggleIsBlack ? (chanR = 0) : (chanR = chanR);
-      else {
-        chanR = 255;
-        if (thresholdToggleIsWhite) {
-          chanG = 255;
-          chanB = 255;
-        }
-      }
-      captureCopy.pixels[index + 0] = chanR;
-      captureCopy.pixels[index + 1] = chanG;
-      captureCopy.pixels[index + 2] = chanB;
+      let chanNew = createThresholdForRGB(redThresholdSlider, chanR, chanG, chanB);
+      captureCopy.pixels[index + 0] = chanNew[0];
+      captureCopy.pixels[index + 1] = chanNew[1];
+      captureCopy.pixels[index + 2] = chanNew[2];
     }
   }
   captureCopy.updatePixels();
@@ -549,17 +562,10 @@ function captureEditThresholdG(src, x, y, w, h) {
       let chanR = 0;
       let chanG = captureCopy.pixels[index + 1];
       let chanB = 0;
-      if (chanG > greenThresholdSlider.value()) thresholdToggleIsBlack ? (chanG = 0) : (chanG = chanG);
-      else {
-        chanG = 255;
-        if (thresholdToggleIsWhite) {
-          chanB = 255;
-          chanR = 255;
-        }
-      }
-      captureCopy.pixels[index + 0] = chanR;
-      captureCopy.pixels[index + 1] = chanG;
-      captureCopy.pixels[index + 2] = chanB;
+      let chanNew = createThresholdForRGB(greenThresholdSlider, chanG, chanB, chanR);
+      captureCopy.pixels[index + 0] = chanNew[2];
+      captureCopy.pixels[index + 1] = chanNew[0];
+      captureCopy.pixels[index + 2] = chanNew[1];
     }
   }
   captureCopy.updatePixels();
@@ -576,21 +582,27 @@ function captureEditThresholdB(src, x, y, w, h) {
       let chanR = 0;
       let chanG = 0;
       let chanB = captureCopy.pixels[index + 2];
-      if (chanB > blueThresholdSlider.value()) thresholdToggleIsBlack ? (chanB = 0) : (chanB = chanB);
-      else {
-        chanB = 255;
-        if (thresholdToggleIsWhite) {
-          chanR = 255;
-          chanG = 255;
-        }
-      }
-      captureCopy.pixels[index + 0] = chanR;
-      captureCopy.pixels[index + 1] = chanG;
-      captureCopy.pixels[index + 2] = chanB;
+      let chanNew = createThresholdForRGB(blueThresholdSlider, chanB, chanR, chanG);
+      captureCopy.pixels[index + 0] = chanNew[1];
+      captureCopy.pixels[index + 1] = chanNew[2];
+      captureCopy.pixels[index + 2] = chanNew[0];
     }
   }
   captureCopy.updatePixels();
   image(captureCopy, x, y, w, h);
+}
+
+// Row 3 helper function
+function createThresholdForRGB(slider, chanFocused, chanSide1, chanSide2) {
+  if (chanFocused > slider.value()) {
+    chanFocused = 255;
+    if (thresholdToggleIsWhite) {
+      chanSide1 = 255;
+      chanSide2 = 255;
+    }
+  } else thresholdToggleIsBlack ? (chanFocused = 0) : (chanFocused = chanFocused);
+
+  return [chanFocused, chanSide1, chanSide2];
 }
 
 // Row 4
@@ -635,7 +647,7 @@ function captureEditColourSpace2(src, x, y, w, h) {
 }
 
 // Row 4 helper function
-function fromRGBtoCMY(slidersArePresent, src, currentIndex, incomingR, incomingG, incomingB) {
+function fromRGBtoCMY(isRow4, src, currentIndex, incomingR, incomingG, incomingB) {
   /*
   Useful links
   https://users.ece.utexas.edu/~bevans/talks/hp-dsp-seminar/07_C6xImage2/tsld011.htm
@@ -654,19 +666,23 @@ function fromRGBtoCMY(slidersArePresent, src, currentIndex, incomingR, incomingG
   let myMagenta = 1 - incomingG;
   let myYellow = 1 - incomingB;
 
-  // Change output and reset range back to 0~255
-  if (slidersArePresent) {
+  // Change output and reset range back from 0~1 to 255~0
+  if (isRow4) {
     src.pixels[currentIndex + 0] = map(myCyan * (cyanSlider.value() / 100), 0, 1, 255, 0);
     src.pixels[currentIndex + 1] = map(myMagenta * (magentaSlider.value() / 100), 0, 1, 255, 0);
     src.pixels[currentIndex + 2] = map(myYellow * (yellowSlider.value() / 100), 0, 1, 255, 0);
   } else {
+    myCyan > cyanThresholdSlider.value() / 100 ? (myCyan = 0) : (myCyan = 1);
+    myMagenta > magentaThresholdSlider.value() / 100 ? (myMagenta = 0) : (myMagenta = 1);
+    myYellow > yellowThresholdSlider.value() / 100 ? (myYellow = 0) : (myYellow = 1);
+
     src.pixels[currentIndex + 0] = map(myCyan, 0, 1, 255, 0);
     src.pixels[currentIndex + 1] = map(myMagenta, 0, 1, 255, 0);
     src.pixels[currentIndex + 2] = map(myYellow, 0, 1, 255, 0);
   }
 }
 
-function fromRGBtoHSV(slidersArePresent, src, currentIndex, incomingR, incomingG, incomingB) {
+function fromRGBtoHSV(isRow4, src, currentIndex, incomingR, incomingG, incomingB) {
   /*
   Useful links
   https://cs.stackexchange.com/questions/64549/convert-hsv-to-rgb-colors
@@ -674,30 +690,34 @@ function fromRGBtoHSV(slidersArePresent, src, currentIndex, incomingR, incomingG
 
   // ----- Convert from RGB to HSV: note that H = 0~360 / S = 0~1 / V = 0~1 ----- //
   // Value
-  let myValueMax = max(incomingR, incomingG, incomingB);
-  let myValueMin = min(incomingR, incomingG, incomingB);
+  let myValMax = max(incomingR, incomingG, incomingB);
+  let myValMin = min(incomingR, incomingG, incomingB);
 
   // Saturation
-  let mySaturation;
-  if (myValueMax == 0 || myValueMin == 0) mySaturation = 0;
-  else mySaturation = (myValueMax - myValueMin) / myValueMax;
+  let mySat;
+  if (myValMax == 0 || myValMin == 0) mySat = 0;
+  else mySat = (myValMax - myValMin) / myValMax;
 
   // Hue
   let myHue;
-  if (myValueMax == incomingR) myHue = 60 * ((0 + (incomingG - incomingB)) / (myValueMax - myValueMin));
-  if (myValueMax == incomingG) myHue = 60 * ((2 + (incomingB - incomingR)) / (myValueMax - myValueMin));
-  if (myValueMax == incomingB) myHue = 60 * ((4 + (incomingR - incomingG)) / (myValueMax - myValueMin));
+  if (myValMax == incomingR) myHue = 60 * ((0 + (incomingG - incomingB)) / (myValMax - myValMin));
+  if (myValMax == incomingG) myHue = 60 * ((2 + (incomingB - incomingR)) / (myValMax - myValMin));
+  if (myValMax == incomingB) myHue = 60 * ((4 + (incomingR - incomingG)) / (myValMax - myValMin));
   if (myHue < 0) myHue += 360;
 
   // Change output and reset range back to 0~255
-  if (slidersArePresent) {
+  if (isRow4) {
     src.pixels[currentIndex + 0] = map(myHue * (hueSlider.value() / 360), 0, 360, 0, 255);
-    src.pixels[currentIndex + 1] = map(mySaturation * (satSlider.value() / 100), 0, 1, 0, 255);
-    src.pixels[currentIndex + 2] = map(myValueMax * (valSlider.value() / 100), 0, 1, 0, 255);
+    src.pixels[currentIndex + 1] = map(mySat * (satSlider.value() / 100), 0, 1, 0, 255);
+    src.pixels[currentIndex + 2] = map(myValMax * (valSlider.value() / 100), 0, 1, 0, 255);
   } else {
+    myHue > hueThresholdSlider.value() ? (myHue = 0) : (myHue = 360);
+    mySat > satThresholdSlider.value() / 100 ? (mySat = 0) : (mySat = 1);
+    myValMax > valThresholdSlider.value() / 100 ? (myValMax = 1) : (myValMax = 0);
+
     src.pixels[currentIndex + 0] = map(myHue, 0, 360, 0, 255);
-    src.pixels[currentIndex + 1] = map(mySaturation, 0, 1, 0, 255);
-    src.pixels[currentIndex + 2] = map(myValueMax, 0, 1, 0, 255);
+    src.pixels[currentIndex + 1] = map(mySat, 0, 1, 0, 255);
+    src.pixels[currentIndex + 2] = map(myValMax, 0, 1, 0, 255);
   }
 }
 
