@@ -3,7 +3,7 @@ let capture;
 let setWidth = 160; // This is the minimum, original = 640
 let setHeight = 120; // This is the minimum, original = 480
 let marginWidth = 20; // Recommended minimum = 20
-let marginHeight = 50; // Recommended minimum = 40
+let marginHeight = 70; // Recommended minimum = 40 / maximum = 70
 let positions = []; // positions to end up like this: [ [{x,y}, {x,y}, {x,y}], repeat 4 more times ]
 let hoverToggleButton;
 let hoverEffectIsOn = true;
@@ -159,7 +159,7 @@ function setup() {
     else thresholdToggleBlackButton.html("Toggle Black:<br>Off");
   });
 
-  thresholdToggleWhiteButton = createButton("Toggle White:<br>On"); // Use "<br>" instead of "\n"
+  thresholdToggleWhiteButton = createButton("Toggle White:<br>Off"); // Use "<br>" instead of "\n"
   thresholdToggleWhiteButton.mousePressed(function () {
     thresholdToggleIsWhite = !thresholdToggleIsWhite;
     if (thresholdToggleIsWhite) thresholdToggleWhiteButton.html("Toggle White:<br>On");
@@ -296,7 +296,14 @@ function draw() {
   textAndSliderBottomCenter(redThresholdSlider, positions[2][0].x, positions[2][0].y, "Threshold to turn Red: ");
   textAndSliderBottomCenter(greenThresholdSlider, positions[2][1].x, positions[2][1].y, "Threshold to turn Green: ");
   textAndSliderBottomCenter(blueThresholdSlider, positions[2][2].x, positions[2][2].y, "Threshold to turn Blue: ");
-  // Row 5 (row 4 has nothing)
+  // Row 4
+  textAndSliderBottomLeft(cyanSlider, inputFeed.width * 0.55, positions[3][1].x, positions[3][1].y, "Cyan: ", "%");
+  textAndSliderBottomLeft(magentaSlider, inputFeed.width * 0.55, positions[3][1].x, positions[3][1].y + cyanSlider.height * 1.2, "Magenta: ", "%");
+  textAndSliderBottomLeft(yellowSlider, inputFeed.width * 0.55, positions[3][1].x, positions[3][1].y + cyanSlider.height * 1.2 + magentaSlider.height * 1.2, "Yellow: ", "%");
+  textAndSliderBottomLeft(hueSlider, inputFeed.width * 0.45, positions[3][2].x, positions[3][2].y, "Hue: ", "°");
+  textAndSliderBottomLeft(satSlider, inputFeed.width * 0.45, positions[3][2].x, positions[3][2].y + hueSlider.height * 1.2, "Sat.: ", "%");
+  textAndSliderBottomLeft(valSlider, inputFeed.width * 0.45, positions[3][2].x, positions[3][2].y + hueSlider.height * 1.2 + satSlider.height * 1.2, "Value: ", "%");
+  // Row 5
   detectDefaultButton.position(positions[4][0].x - detectDefaultButton.width - detectDefaultButton.height / 4, positions[4][0].y);
   detectGreyButton.position(positions[4][0].x - detectGreyButton.width - detectGreyButton.height / 4, detectDefaultButton.y + detectDefaultButton.height * 1.25);
   detectBlurButton.position(positions[4][0].x - detectBlurButton.width - detectBlurButton.height / 4, detectGreyButton.y + detectGreyButton.height * 1.25);
@@ -307,14 +314,6 @@ function draw() {
   textAndSliderBottomLeft(detectDefaultSlider, inputFeed.width * 0.7, positions[4][0].x, positions[4][0].y, "Box thickness: ", "px");
   textAndSliderBottomLeft(detectBlurSlider, inputFeed.width * 0.4, positions[4][0].x, positions[4][0].y + detectDefaultSlider.height * 1.2, "Blur: ", "x");
   textAndSliderBottomLeft(detectPixelSlider, inputFeed.width * 0.4, positions[4][0].x, positions[4][0].y + detectDefaultSlider.height * 1.2 + detectBlurSlider.height * 1.2, "Pixel: ", "px");
-  // Row 5, below capture middle
-  textAndSliderBottomLeft(cyanSlider, inputFeed.width * 0.55, positions[4][1].x, positions[4][1].y, "Cyan: ", "%");
-  textAndSliderBottomLeft(magentaSlider, inputFeed.width * 0.55, positions[4][1].x, positions[4][1].y + cyanSlider.height * 1.2, "Magenta: ", "%");
-  textAndSliderBottomLeft(yellowSlider, inputFeed.width * 0.55, positions[4][1].x, positions[4][1].y + cyanSlider.height * 1.2 + magentaSlider.height * 1.2, "Yellow: ", "%");
-  // Row 5, below capture right
-  textAndSliderBottomLeft(hueSlider, inputFeed.width * 0.45, positions[4][2].x, positions[4][2].y, "Hue: ", "°");
-  textAndSliderBottomLeft(satSlider, inputFeed.width * 0.45, positions[4][2].x, positions[4][2].y + hueSlider.height * 1.2, "Sat.: ", "%");
-  textAndSliderBottomLeft(valSlider, inputFeed.width * 0.45, positions[4][2].x, positions[4][2].y + hueSlider.height * 1.2 + satSlider.height * 1.2, "Value: ", "%");
 
   // ----- Capture grid hover effect ----- //
   if (hoverEffectIsOn) {
@@ -339,7 +338,7 @@ function windowResized() {
   resizeCanvas(windowWidth, windowHeight);
 }
 
-// Helper functions
+// General helper functions
 function hoverEffect(x, y, w, h, string, linebreakCount) {
   // Effect
   if (
@@ -611,46 +610,13 @@ function captureEditColourSpace1(src, x, y, w, h) {
       let chanR = captureCopy.pixels[index + 0];
       let chanG = captureCopy.pixels[index + 1];
       let chanB = captureCopy.pixels[index + 2];
-
-      /*
-      Useful links
-      https://users.ece.utexas.edu/~bevans/talks/hp-dsp-seminar/07_C6xImage2/tsld011.htm
-      https://www.youtube.com/watch?v=X8OY-iwK_Kw
-      https://colormine.org/convert/rgb-to-cmy
-      */
-
-      // ----- Convert from RGB to CMY: note that RGB 255 = CMY 0 ----- //
-      // Normalise RGB from 0~255 to 0~1
-      chanR = map(chanR, 0, 255, 0, 1);
-      chanG = map(chanG, 0, 255, 0, 1);
-      chanB = map(chanB, 0, 255, 0, 1);
-
-      // Calculate CMY
-      let myCyan = 1 - chanR;
-      let myMagenta = 1 - chanG;
-      let myYellow = 1 - chanB;
-
-      // Change output and reset range back to 0~255
-      captureCopy.pixels[index + 0] = map(myCyan, 0, 1, 255, 0);
-      captureCopy.pixels[index + 1] = map(myMagenta, 0, 1, 255, 0);
-      captureCopy.pixels[index + 2] = map(myYellow, 0, 1, 255, 0);
+      fromRGBtoCMY(true, captureCopy, index, chanR, chanG, chanB);
     }
   }
   captureCopy.updatePixels();
   image(captureCopy, x, y, w, h);
 }
 
-/*
-TODO
-===== ===== ===== ===== =====
-choose one formula to use
-
-then, ensure the following function uses the same one, as it is copy-pasted from here to there:
-- captureEditColourSpace2Segment()
-- faceDetectEdit()'s 'detectConvertEffect'
-
-then refactor so it can easily be re-used
-*/
 function captureEditColourSpace2(src, x, y, w, h) {
   let captureCopy = createImage(setWidth, setHeight);
   captureCopy.copy(src, 0, 0, setWidth, setHeight, 0, 0, setWidth, setHeight);
@@ -661,65 +627,78 @@ function captureEditColourSpace2(src, x, y, w, h) {
       let chanR = captureCopy.pixels[index + 0];
       let chanG = captureCopy.pixels[index + 1];
       let chanB = captureCopy.pixels[index + 2];
-
-      /*
-      Useful links
-      https://cs.stackexchange.com/questions/64549/convert-hsv-to-rgb-colors
-      */
-
-      // ----- Convert from RGB to HSV: note that H = 0~360 / S = 0~1 / V = 0~1 ----- //
-
-      // ----- Attempt 1: based on own source (the link above)
-      // Value
-      let myValueMax = max(chanR, chanG, chanB);
-      let myValueMin = min(chanR, chanG, chanB);
-      // Saturation
-      let mySaturation;
-      if (myValueMax == 0 || myValueMin == 0) mySaturation = 0;
-      else mySaturation = (myValueMax - myValueMin) / myValueMax;
-      // Hue
-      let myHue;
-      if (myValueMax == chanR) myHue = 60 * ((0 + (chanG - chanB)) / (myValueMax - myValueMin));
-      else if (myValueMax == chanG) myHue = 60 * ((2 + (chanB - chanR)) / (myValueMax - myValueMin));
-      else if (myValueMax == chanB) myHue = 60 * ((4 + (chanR - chanG)) / (myValueMax - myValueMin));
-      if (myHue < 0) myHue += 360;
-      // Change output and reset range back to 0~255
-      captureCopy.pixels[index + 0] = map(myHue, 0, 360, 0, 255);
-      captureCopy.pixels[index + 1] = map(mySaturation, 0, 1, 0, 255);
-      captureCopy.pixels[index + 2] = map(myValueMax, 0, 1, 0, 255);
-
-      // // ----- Attempt 2: based on Coursera PDF
-      // let maxRGB = max(chanR, chanG, chanB);
-      // let minRGB = min(chanR, chanG, chanB);
-      // // Saturation
-      // let mySaturation = (maxRGB - minRGB) / maxRGB;
-      // // Value
-      // let myValue = maxRGB;
-      // // Hue
-      // let myHue;
-      // let chanRPrime = (maxRGB - chanR) / (maxRGB - minRGB);
-      // let chanGPrime = (maxRGB - chanG) / (maxRGB - minRGB);
-      // let chanBPrime = (maxRGB - chanB) / (maxRGB - minRGB);
-      // if (mySaturation == 0) {
-      //   myHue = undefined;
-      // } else {
-      //   if (chanR == maxRGB && chanG == minRGB) myHue = 5 + chanBPrime;
-      //   else if (chanR == maxRGB && chanG != minRGB) myHue = 1 - chanGPrime;
-      //   else if (chanG == maxRGB && chanB == minRGB) myHue = chanRPrime + 1;
-      //   else if (chanG == maxRGB && chanB != minRGB) myHue = 3 - chanBPrime;
-      //   else if (chanR == maxRGB) myHue = 3 + chanGPrime;
-      //   else myHue = 5 - chanRPrime;
-      // }
-      // myHue *= 60;
-      // myHue %= 360;
-      // // Change output and reset range back to 0~255
-      // captureCopy.pixels[index + 0] = map(myHue, 0, 360, 0, 255);
-      // captureCopy.pixels[index + 1] = map(mySaturation, 0, 1, 0, 255);
-      // captureCopy.pixels[index + 2] = map(maxRGB, 0, 1, 0, 255);
+      fromRGBtoHSV(true, captureCopy, index, chanR, chanG, chanB);
     }
   }
   captureCopy.updatePixels();
   image(captureCopy, x, y, w, h);
+}
+
+// Row 4 helper function
+function fromRGBtoCMY(slidersArePresent, src, currentIndex, incomingR, incomingG, incomingB) {
+  /*
+  Useful links
+  https://users.ece.utexas.edu/~bevans/talks/hp-dsp-seminar/07_C6xImage2/tsld011.htm
+  https://www.youtube.com/watch?v=X8OY-iwK_Kw
+  https://colormine.org/convert/rgb-to-cmy
+  */
+
+  // ----- Convert from RGB to CMY: note that RGB 255 = CMY 0 ----- //
+  // Normalise RGB from 0~255 to 0~1
+  incomingR = map(incomingR, 0, 255, 0, 1);
+  incomingG = map(incomingG, 0, 255, 0, 1);
+  incomingB = map(incomingB, 0, 255, 0, 1);
+
+  // Calculate CMY
+  let myCyan = 1 - incomingR;
+  let myMagenta = 1 - incomingG;
+  let myYellow = 1 - incomingB;
+
+  // Change output and reset range back to 0~255
+  if (slidersArePresent) {
+    src.pixels[currentIndex + 0] = map(myCyan * (cyanSlider.value() / 100), 0, 1, 255, 0);
+    src.pixels[currentIndex + 1] = map(myMagenta * (magentaSlider.value() / 100), 0, 1, 255, 0);
+    src.pixels[currentIndex + 2] = map(myYellow * (yellowSlider.value() / 100), 0, 1, 255, 0);
+  } else {
+    src.pixels[currentIndex + 0] = map(myCyan, 0, 1, 255, 0);
+    src.pixels[currentIndex + 1] = map(myMagenta, 0, 1, 255, 0);
+    src.pixels[currentIndex + 2] = map(myYellow, 0, 1, 255, 0);
+  }
+}
+
+function fromRGBtoHSV(slidersArePresent, src, currentIndex, incomingR, incomingG, incomingB) {
+  /*
+  Useful links
+  https://cs.stackexchange.com/questions/64549/convert-hsv-to-rgb-colors
+  */
+
+  // ----- Convert from RGB to HSV: note that H = 0~360 / S = 0~1 / V = 0~1 ----- //
+  // Value
+  let myValueMax = max(incomingR, incomingG, incomingB);
+  let myValueMin = min(incomingR, incomingG, incomingB);
+
+  // Saturation
+  let mySaturation;
+  if (myValueMax == 0 || myValueMin == 0) mySaturation = 0;
+  else mySaturation = (myValueMax - myValueMin) / myValueMax;
+
+  // Hue
+  let myHue;
+  if (myValueMax == incomingR) myHue = 60 * ((0 + (incomingG - incomingB)) / (myValueMax - myValueMin));
+  if (myValueMax == incomingG) myHue = 60 * ((2 + (incomingB - incomingR)) / (myValueMax - myValueMin));
+  if (myValueMax == incomingB) myHue = 60 * ((4 + (incomingR - incomingG)) / (myValueMax - myValueMin));
+  if (myHue < 0) myHue += 360;
+
+  // Change output and reset range back to 0~255
+  if (slidersArePresent) {
+    src.pixels[currentIndex + 0] = map(myHue * (hueSlider.value() / 360), 0, 360, 0, 255);
+    src.pixels[currentIndex + 1] = map(mySaturation * (satSlider.value() / 100), 0, 1, 0, 255);
+    src.pixels[currentIndex + 2] = map(myValueMax * (valSlider.value() / 100), 0, 1, 0, 255);
+  } else {
+    src.pixels[currentIndex + 0] = map(myHue, 0, 360, 0, 255);
+    src.pixels[currentIndex + 1] = map(mySaturation, 0, 1, 0, 255);
+    src.pixels[currentIndex + 2] = map(myValueMax, 0, 1, 0, 255);
+  }
 }
 
 // Row 5
@@ -747,6 +726,41 @@ function captureEditFaceDetect(src, x, y, w, h) {
   }
 }
 
+function captureEditColourSpace1Segment(src, x, y, w, h) {
+  let captureCopy = createImage(setWidth, setHeight);
+  captureCopy.copy(src, 0, 0, setWidth, setHeight, 0, 0, setWidth, setHeight);
+  captureCopy.loadPixels();
+  for (let x = 0; x < captureCopy.width; x++) {
+    for (let y = 0; y < captureCopy.height; y++) {
+      let index = (captureCopy.width * y + x) * 4;
+      let chanR = captureCopy.pixels[index + 0];
+      let chanG = captureCopy.pixels[index + 1];
+      let chanB = captureCopy.pixels[index + 2];
+      fromRGBtoCMY(false, captureCopy, index, chanR, chanG, chanB);
+    }
+  }
+  captureCopy.updatePixels();
+  image(captureCopy, x, y, w, h);
+}
+
+function captureEditColourSpace2Segment(src, x, y, w, h) {
+  let captureCopy = createImage(setWidth, setHeight);
+  captureCopy.copy(src, 0, 0, setWidth, setHeight, 0, 0, setWidth, setHeight);
+  captureCopy.loadPixels();
+  for (let x = 0; x < captureCopy.width; x++) {
+    for (let y = 0; y < captureCopy.height; y++) {
+      let index = (captureCopy.width * y + x) * 4;
+      let chanR = captureCopy.pixels[index + 0];
+      let chanG = captureCopy.pixels[index + 1];
+      let chanB = captureCopy.pixels[index + 2];
+      fromRGBtoHSV(false, captureCopy, index, chanR, chanG, chanB);
+    }
+  }
+  captureCopy.updatePixels();
+  image(captureCopy, x, y, w, h);
+}
+
+// Row 5 helper functions
 function faceDetectEdit(src, faceX, faceY, faceWidth, faceHeight, translateX, translateY) {
   for (let x = faceX; x < faceX + faceWidth; x++) {
     for (let y = faceY; y < faceY + faceHeight; y++) {
@@ -783,19 +797,7 @@ function faceDetectEdit(src, faceX, faceY, faceWidth, faceHeight, translateX, tr
           src.pixels[index + 2] = myConv[2];
           break;
         case detectConvertEffect:
-          let myValueMax = max(chanR, chanG, chanB);
-          let myValueMin = min(chanR, chanG, chanB);
-          let mySaturation;
-          if (myValueMax == 0 || myValueMin == 0) mySaturation = 0;
-          else mySaturation = (myValueMax - myValueMin) / myValueMax;
-          let myHue;
-          if (myValueMax == chanR) myHue = 60 * ((0 + (chanG - chanB)) / (myValueMax - myValueMin));
-          else if (myValueMax == chanG) myHue = 60 * ((2 + (chanB - chanR)) / (myValueMax - myValueMin));
-          else if (myValueMax == chanB) myHue = 60 * ((4 + (chanR - chanG)) / (myValueMax - myValueMin));
-          if (myHue < 0) myHue += 360;
-          src.pixels[index + 0] = map(myHue, 0, 360, 0, 255);
-          src.pixels[index + 1] = map(mySaturation, 0, 1, 0, 255);
-          src.pixels[index + 2] = map(myValueMax, 0, 1, 0, 255);
+          fromRGBtoHSV(false, src, index, chanR, chanG, chanB);
           break;
         case detectPixelEffect:
           createPixelEffect(detectPixelSlider.value(), src, faceX, faceY, faceWidth, faceHeight);
@@ -810,7 +812,6 @@ function faceDetectEdit(src, faceX, faceY, faceWidth, faceHeight, translateX, tr
   }
 }
 
-// faceDetectEdit()'s detectBlurEffect's helper functions
 function createBlurMatrix(matrixSize) {
   let totalElements = matrixSize * matrixSize;
   let matrix = [];
@@ -848,7 +849,6 @@ function convolution(x, y, matrix, src) {
   return [totalR, totalG, totalB];
 }
 
-// faceDetectEdit()'s detectPixelEffect's helper functions
 function createPixelEffect(pixelSize, src, faceX, faceY, faceWidth, faceHeight) {
   // Within face detected area...
   for (let x = faceX; x < faceX + faceWidth; x += pixelSize) {
@@ -888,70 +888,4 @@ function createPixelEffect(pixelSize, src, faceX, faceY, faceWidth, faceHeight) 
       }
     }
   }
-}
-
-// TODO: Refactor instead of copy-pasting from captureEditColourSpace1() above
-function captureEditColourSpace1Segment(src, x, y, w, h) {
-  let captureCopy = createImage(setWidth, setHeight);
-  captureCopy.copy(src, 0, 0, setWidth, setHeight, 0, 0, setWidth, setHeight);
-  captureCopy.loadPixels();
-  for (let x = 0; x < captureCopy.width; x++) {
-    for (let y = 0; y < captureCopy.height; y++) {
-      let index = (captureCopy.width * y + x) * 4;
-      let chanR = captureCopy.pixels[index + 0];
-      let chanG = captureCopy.pixels[index + 1];
-      let chanB = captureCopy.pixels[index + 2];
-
-      // Normalise RGB and calculate CMY
-      let myCyan = 1 - map(chanR, 0, 255, 0, 1);
-      let myMagenta = 1 - map(chanG, 0, 255, 0, 1);
-      let myYellow = 1 - map(chanB, 0, 255, 0, 1);
-
-      // Change output and reset range back to 0~255
-      captureCopy.pixels[index + 0] = map(myCyan * (cyanSlider.value() / 100), 0, 1, 255, 0);
-      captureCopy.pixels[index + 1] = map(myMagenta * (magentaSlider.value() / 100), 0, 1, 255, 0);
-      captureCopy.pixels[index + 2] = map(myYellow * (yellowSlider.value() / 100), 0, 1, 255, 0);
-    }
-  }
-  captureCopy.updatePixels();
-  image(captureCopy, x, y, w, h);
-}
-
-// FIXME: unsure if slider value is applied correctly (eg. should i "+ hueSlider.value()" instead?)
-// TODO: Refactor instead of copy-pasting from captureEditColourSpace2() above
-function captureEditColourSpace2Segment(src, x, y, w, h) {
-  let captureCopy = createImage(setWidth, setHeight);
-  captureCopy.copy(src, 0, 0, setWidth, setHeight, 0, 0, setWidth, setHeight);
-  captureCopy.loadPixels();
-  for (let x = 0; x < captureCopy.width; x++) {
-    for (let y = 0; y < captureCopy.height; y++) {
-      let index = (captureCopy.width * y + x) * 4;
-      let chanR = captureCopy.pixels[index + 0];
-      let chanG = captureCopy.pixels[index + 1];
-      let chanB = captureCopy.pixels[index + 2];
-
-      // Value
-      let myValueMax = max(chanR, chanG, chanB);
-      let myValueMin = min(chanR, chanG, chanB);
-
-      // Saturation
-      let mySaturation;
-      if (myValueMax == 0 || myValueMin == 0) mySaturation = 0;
-      else mySaturation = (myValueMax - myValueMin) / myValueMax;
-
-      // Hue
-      let myHue;
-      if (myValueMax == chanR) myHue = 60 * ((0 + (chanG - chanB)) / (myValueMax - myValueMin));
-      else if (myValueMax == chanG) myHue = 60 * ((2 + (chanB - chanR)) / (myValueMax - myValueMin));
-      else if (myValueMax == chanB) myHue = 60 * ((4 + (chanR - chanG)) / (myValueMax - myValueMin));
-      if (myHue < 0) myHue += 360;
-
-      // Change output and reset range back to 0~255
-      captureCopy.pixels[index + 0] = map(myHue * (hueSlider.value() / 360), 0, 360, 0, 255);
-      captureCopy.pixels[index + 1] = map(mySaturation * (satSlider.value() / 100), 0, 1, 0, 255);
-      captureCopy.pixels[index + 2] = map(myValueMax * (valSlider.value() / 100), 0, 1, 0, 255);
-    }
-  }
-  captureCopy.updatePixels();
-  image(captureCopy, x, y, w, h);
 }
