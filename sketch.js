@@ -1,31 +1,35 @@
+// ----- General variables ----- //
 let capture;
-let setWidth = 640 / 4; // minimum = 160
-let setHeight = 480 / 4; // minimum = 120
-let marginWidth = 20;
-let marginHeight = 40;
-let buttonMargin = marginHeight / 4;
+let setWidth = 160; // This is the minimum, original = 640
+let setHeight = 120; // This is the minimum, original = 480
+let marginWidth = 20; // Recommended minimum = 20
+let marginHeight = 50; // Recommended minimum = 40
 let positions = []; // positions to end up like this: [ [{x,y}, {x,y}, {x,y}], repeat 4 more times ]
 
-// For picture-taking and resuming video
+// ----- For picture-taking and resuming video ----- //
 let inputFeed;
 let pictureButton;
 let videoButton;
 let pictureTaken = false; // Simply for adjusting pictureButton's position
 
-// For captures
+// ----- For captures ----- //
 let brightSlider;
 let redSlider;
 let greenSlider;
 let blueSlider;
-let redRemovedSlider;
-let greenRemovedSlider;
-let blueRemovedSlider;
+let redThresholdSlider;
+let greenThresholdSlider;
+let blueThresholdSlider;
 let cyanSlider;
 let magentaSlider;
 let yellowSlider;
 let hueSlider;
 let satSlider;
 let valSlider;
+
+// For threshold
+let thresholdToggleButton;
+let thresholdToggleIsNowBlack = true;
 
 // For face detection
 let detector;
@@ -90,9 +94,9 @@ function setup() {
   redSlider = createSlider(0, 255, 255, 1);
   greenSlider = createSlider(0, 255, 255, 1);
   blueSlider = createSlider(0, 255, 255, 1);
-  redRemovedSlider = createSlider(0, 255, 0, 1);
-  greenRemovedSlider = createSlider(0, 255, 0, 1);
-  blueRemovedSlider = createSlider(0, 255, 0, 1);
+  redThresholdSlider = createSlider(0, 255, 85, 1); // 85 = (1 / 3) of 255
+  greenThresholdSlider = createSlider(0, 255, 85, 1); // 85 = (1 / 3) of 255
+  blueThresholdSlider = createSlider(0, 255, 85, 1); // 85 = (1 / 3) of 255
   cyanSlider = createSlider(0, 100, 100, 1);
   magentaSlider = createSlider(0, 100, 100, 1);
   yellowSlider = createSlider(0, 100, 100, 1);
@@ -101,25 +105,32 @@ function setup() {
   valSlider = createSlider(0, 100, 100, 1);
 
   let sliders = [];
-  sliders.push(brightSlider, redSlider, greenSlider, blueSlider, redRemovedSlider, greenRemovedSlider, blueRemovedSlider, cyanSlider, magentaSlider, yellowSlider, hueSlider, satSlider, valSlider);
+  sliders.push(brightSlider, redSlider, greenSlider, blueSlider, redThresholdSlider, greenThresholdSlider, blueThresholdSlider, cyanSlider, magentaSlider, yellowSlider, hueSlider, satSlider, valSlider);
   for (let i = 0; i < sliders.length; i++) {
     sliders[i].style("width", capture.width + "px"); // Set slider's width to be capture's width by default
   }
 
-  // ----- For face detection ----- //
+  // For threshold
+  thresholdToggleButton = createButton("Toggle Black:\nOn");
+  thresholdToggleButton.mousePressed(function () {
+    thresholdToggleIsNowBlack = !thresholdToggleIsNowBlack;
+    if (thresholdToggleIsNowBlack) thresholdToggleButton.html("Toggle Black:\nOn");
+    else thresholdToggleButton.html("Toggle Black:\nOff");
+  });
+
+  // For face detection
   let scaleFactor = 1.2;
   let classifier = objectdetect.frontalface;
   detector = new objectdetect.detector(setWidth, setHeight, scaleFactor, classifier);
 
-  // Button creation (tried using loop to createButton(), doesn't work)
-  detectDefaultButton = createButton("Default");
+  // For face detection's buttons
+  detectDefaultButton = createButton("Default"); // Tried using a loop to createButton() to simplify; doesn't work
   detectGreyButton = createButton("Greyscale");
   detectBlurButton = createButton("Blur");
   detectConvertButton = createButton("HSV Mode");
   detectPixelButton = createButton("Pixelate");
   detectNegativeButton = createButton("Negative");
 
-  // Button function
   detectDefaultButton.mousePressed(function () {
     setAllEffectsFalse();
     detectDefaultEffect = true;
@@ -150,7 +161,7 @@ function setup() {
     detectNegativeEffect = true;
   });
 
-  // Slider creation
+  // For face detection's sliders
   detectDefaultSlider = createSlider(1, 10, 2, 1);
   detectBlurSlider = createSlider(1, 30, 15, 1);
   detectPixelSlider = createSlider(1, 20, 10, 1);
@@ -170,7 +181,7 @@ function draw() {
     positions[i] = [];
     for (let j = 0; j < colCount; j++) {
       let totalWidth = colCount * (setWidth + marginWidth) - marginWidth;
-      let extraHeight = detectDefaultButton.height * 3 + buttonMargin; // Any 3 buttons can be used + (buttonMargin)
+      let extraHeight = detectDefaultButton.height * 3.5; // The space taken up below captureEditFaceDetect() is (button.height * 3.5) tall
       let totalHeight = rowCount * (setHeight + marginHeight) - marginHeight + extraHeight;
       let startX = (width - totalWidth) / 2;
       let startY = (height - totalHeight) / 2;
@@ -186,7 +197,7 @@ function draw() {
   let buttonPosY = positions[0][2].y;
   if (!pictureTaken) pictureButton.position(buttonPosX - pictureButton.width / 2, buttonPosY);
   else pictureButton.position(buttonPosX - pictureButton.width / 2 - 4, buttonPosY); // Move leftwards slightly due to longer button text
-  videoButton.position(buttonPosX - videoButton.width / 2, buttonPosY + pictureButton.height + buttonMargin);
+  videoButton.position(buttonPosX - videoButton.width / 2, buttonPosY + pictureButton.height * 1.5);
 
   // ----- Capture grid ----- //
   // Row 1
@@ -195,33 +206,35 @@ function draw() {
 
   captureEditGrey(inputFeed, positions[0][1].x, positions[0][1].y, setWidth, setHeight);
   hoverEffectAndText(positions[0][1].x, positions[0][1].y, capture.width, capture.height, "Greyscale\nand\nBrightness at " + brightSlider.value() + "%", 2);
-  sliderAndText(brightSlider, positions[0][1].x, positions[0][1].y, "Brightness", "%");
+  textAndSliderBottomCenter(brightSlider, positions[0][1].x, positions[0][1].y, "Brightness", "%");
 
   // Row 2
   captureEditR(inputFeed, positions[1][0].x, positions[1][0].y, setWidth, setHeight);
   hoverEffectAndText(positions[1][0].x, positions[1][0].y, capture.width, capture.height, "Red Channel", 0);
-  sliderAndText(redSlider, positions[1][0].x, positions[1][0].y, "Red Value");
+  textAndSliderBottomCenter(redSlider, positions[1][0].x, positions[1][0].y, "Red Value");
 
   captureEditG(inputFeed, positions[1][1].x, positions[1][1].y, setWidth, setHeight);
   hoverEffectAndText(positions[1][1].x, positions[1][1].y, capture.width, capture.height, "Green Channel", 0);
-  sliderAndText(greenSlider, positions[1][1].x, positions[1][1].y, "Green Value");
+  textAndSliderBottomCenter(greenSlider, positions[1][1].x, positions[1][1].y, "Green Value");
 
   captureEditB(inputFeed, positions[1][2].x, positions[1][2].y, setWidth, setHeight);
   hoverEffectAndText(positions[1][2].x, positions[1][2].y, capture.width, capture.height, "Blue Channel", 0);
-  sliderAndText(blueSlider, positions[1][2].x, positions[1][2].y, "Blue Value");
+  textAndSliderBottomCenter(blueSlider, positions[1][2].x, positions[1][2].y, "Blue Value");
 
   // Row 3
-  captureEditSegment1(inputFeed, positions[2][0].x, positions[2][0].y, setWidth, setHeight);
-  hoverEffectAndText(positions[2][0].x, positions[2][0].y, capture.width, capture.height, "Segmented Image", 0);
-  sliderAndText(redRemovedSlider, positions[2][0].x, positions[2][0].y, "Red Removed");
+  thresholdToggleButton.position(positions[2][0].x - thresholdToggleButton.width - thresholdToggleButton.height / 4, positions[2][0].y + inputFeed.height / 2 - thresholdToggleButton.height / 2);
 
-  captureEditSegment2(inputFeed, positions[2][1].x, positions[2][1].y, setWidth, setHeight);
-  hoverEffectAndText(positions[2][1].x, positions[2][1].y, capture.width, capture.height, "Segmented Image", 0);
-  sliderAndText(greenRemovedSlider, positions[2][1].x, positions[2][1].y, "Green Removed");
+  captureEditThresholdR(inputFeed, positions[2][0].x, positions[2][0].y, setWidth, setHeight);
+  hoverEffectAndText(positions[2][0].x, positions[2][0].y, capture.width, capture.height, "Threshold\nImage", 1);
+  textAndSliderBottomCenter(redThresholdSlider, positions[2][0].x, positions[2][0].y, "Threshold to turn Red");
 
-  captureEditSegment3(inputFeed, positions[2][2].x, positions[2][2].y, setWidth, setHeight);
-  hoverEffectAndText(positions[2][2].x, positions[2][2].y, capture.width, capture.height, "Segmented Image", 0);
-  sliderAndText(blueRemovedSlider, positions[2][2].x, positions[2][2].y, "Blue Removed");
+  captureEditThresholdG(inputFeed, positions[2][1].x, positions[2][1].y, setWidth, setHeight);
+  hoverEffectAndText(positions[2][1].x, positions[2][1].y, capture.width, capture.height, "Threshold\nImage", 1);
+  textAndSliderBottomCenter(greenThresholdSlider, positions[2][1].x, positions[2][1].y, "Threshold to turn Green");
+
+  captureEditThresholdB(inputFeed, positions[2][2].x, positions[2][2].y, setWidth, setHeight);
+  hoverEffectAndText(positions[2][2].x, positions[2][2].y, capture.width, capture.height, "Threshold\nImage", 1);
+  textAndSliderBottomCenter(blueThresholdSlider, positions[2][2].x, positions[2][2].y, "Threshold to turn Blue");
 
   // Row 4
   captureEditRepeat(inputFeed, positions[3][0].x, positions[3][0].y, setWidth, setHeight);
@@ -237,29 +250,29 @@ function draw() {
   captureEditFaceDetect(inputFeed, positions[4][0].x, positions[4][0].y, setWidth, setHeight);
   hoverEffectAndText(positions[4][0].x, positions[4][0].y, capture.width, capture.height, "Face Detection\nand\nReplaced\nFace Images", 3);
   // Sliders
-  sliderAndTextBeside(detectDefaultSlider, positions[4][0].x, positions[4][0].y, "Box thickness", "px");
-  sliderAndTextBeside(detectBlurSlider, positions[4][0].x, positions[4][0].y + detectDefaultSlider.height * 2.5, "Blur", "x");
-  sliderAndTextBeside(detectPixelSlider, positions[4][0].x, positions[4][0].y + detectDefaultSlider.height * 2.5 + detectBlurSlider.height * 2.5, "Pixel", "px");
+  textAndSliderLeft(detectDefaultSlider, positions[4][0].x, positions[4][0].y, "Box thickness", "px");
+  textAndSliderLeft(detectBlurSlider, positions[4][0].x, positions[4][0].y + detectDefaultSlider.height * 2.5, "Blur", "x");
+  textAndSliderLeft(detectPixelSlider, positions[4][0].x, positions[4][0].y + detectDefaultSlider.height * 2.5 + detectBlurSlider.height * 2.5, "Pixel", "px");
   // Left side buttons
-  detectDefaultButton.position(positions[4][0].x, positions[4][0].y + inputFeed.height + buttonMargin);
+  detectDefaultButton.position(positions[4][0].x, positions[4][0].y + inputFeed.height + detectDefaultButton.height / 2);
   detectGreyButton.position(positions[4][0].x, detectDefaultButton.y + detectDefaultButton.height);
   detectBlurButton.position(positions[4][0].x, detectGreyButton.y + detectGreyButton.height);
   // Right side buttons
-  detectConvertButton.position(positions[4][0].x + inputFeed.width - detectConvertButton.width, positions[4][0].y + inputFeed.height + buttonMargin);
+  detectConvertButton.position(positions[4][0].x + inputFeed.width - detectConvertButton.width, positions[4][0].y + inputFeed.height + detectConvertButton.height / 2);
   detectPixelButton.position(positions[4][0].x + inputFeed.width - detectPixelButton.width, detectConvertButton.y + detectConvertButton.height);
   detectNegativeButton.position(positions[4][0].x + inputFeed.width - detectNegativeButton.width, detectPixelButton.y + detectPixelButton.height);
 
   captureEditColourSpace1Segment(inputFeed, positions[4][1].x, positions[4][1].y, setWidth, setHeight);
   hoverEffectAndText(positions[4][1].x, positions[4][1].y, capture.width, capture.height, "Segmented Image\nfrom\nColour Space\n(Conversion)\n1", 4);
-  sliderAndTextAlignLeft(cyanSlider, inputFeed.width * 0.55, positions[4][1].x, positions[4][1].y, "Cyan", "%");
-  sliderAndTextAlignLeft(magentaSlider, inputFeed.width * 0.55, positions[4][1].x, positions[4][1].y + cyanSlider.height * 1.2, "Magenta", "%");
-  sliderAndTextAlignLeft(yellowSlider, inputFeed.width * 0.55, positions[4][1].x, positions[4][1].y + cyanSlider.height * 1.2 + magentaSlider.height * 1.2, "Yellow", "%");
+  textAndSliderBottomLeft(cyanSlider, inputFeed.width * 0.55, positions[4][1].x, positions[4][1].y, "Cyan", "%");
+  textAndSliderBottomLeft(magentaSlider, inputFeed.width * 0.55, positions[4][1].x, positions[4][1].y + cyanSlider.height * 1.2, "Magenta", "%");
+  textAndSliderBottomLeft(yellowSlider, inputFeed.width * 0.55, positions[4][1].x, positions[4][1].y + cyanSlider.height * 1.2 + magentaSlider.height * 1.2, "Yellow", "%");
 
   captureEditColourSpace2Segment(inputFeed, positions[4][2].x, positions[4][2].y, setWidth, setHeight);
   hoverEffectAndText(positions[4][2].x, positions[4][2].y, capture.width, capture.height, "Segmented Image\nfrom\nColour Space\n(Conversion)\n2", 4);
-  sliderAndTextAlignLeft(hueSlider, inputFeed.width * 0.45, positions[4][2].x, positions[4][2].y, "Hue", "°");
-  sliderAndTextAlignLeft(satSlider, inputFeed.width * 0.45, positions[4][2].x, positions[4][2].y + hueSlider.height * 1.2, "Sat.", "%");
-  sliderAndTextAlignLeft(valSlider, inputFeed.width * 0.45, positions[4][2].x, positions[4][2].y + hueSlider.height * 1.2 + satSlider.height * 1.2, "Value", "%");
+  textAndSliderBottomLeft(hueSlider, inputFeed.width * 0.45, positions[4][2].x, positions[4][2].y, "Hue", "°");
+  textAndSliderBottomLeft(satSlider, inputFeed.width * 0.45, positions[4][2].x, positions[4][2].y + hueSlider.height * 1.2, "Sat.", "%");
+  textAndSliderBottomLeft(valSlider, inputFeed.width * 0.45, positions[4][2].x, positions[4][2].y + hueSlider.height * 1.2 + satSlider.height * 1.2, "Value", "%");
 }
 
 function windowResized() {
@@ -268,7 +281,7 @@ function windowResized() {
 
 // Helper functions
 function hoverEffectAndText(x, y, w, h, string, linebreakCount) {
-  // Hover effect
+  // Effect
   if (
     // format
     mouseX > x &&
@@ -297,7 +310,7 @@ function hoverEffectAndText(x, y, w, h, string, linebreakCount) {
   text(string, midX, midY);
 }
 
-function sliderAndText(incomingSlider, inputFeedX, inputFeedY, string, stringSuffix = "") {
+function textAndSliderBottomCenter(incomingSlider, inputFeedX, inputFeedY, string, stringSuffix = "") {
   // Text (based on inputFeed's dimensions and incomingSlider's height only)
   text(
     // format
@@ -306,7 +319,7 @@ function sliderAndText(incomingSlider, inputFeedX, inputFeedY, string, stringSuf
     inputFeedY + inputFeed.height + incomingSlider.height
   );
 
-  // Slider (based on inputFeed's dimensions)
+  // Slider (based on inputFeed's dimensions and incomingSlider's height only)
   incomingSlider.position(
     // format
     inputFeedX,
@@ -314,7 +327,7 @@ function sliderAndText(incomingSlider, inputFeedX, inputFeedY, string, stringSuf
   );
 }
 
-function sliderAndTextAlignLeft(incomingSlider, sliderWidth, inputFeedX, inputFeedY, string, stringSuffix = "") {
+function textAndSliderBottomLeft(incomingSlider, sliderWidth, inputFeedX, inputFeedY, string, stringSuffix = "") {
   // Text (based on inputFeed's dimensions and incomingSlider's height only)
   textAlign(LEFT);
   text(
@@ -329,27 +342,27 @@ function sliderAndTextAlignLeft(incomingSlider, sliderWidth, inputFeedX, inputFe
   incomingSlider.position(
     // format
     inputFeedX + sliderWidth,
-    inputFeedY + inputFeed.height + textSize() / 8 // NOTE: added "+ textSize() / 8" to centralise a tiny bit
+    inputFeedY + inputFeed.height + incomingSlider.height / 8 // "+ incomingSlider.height / 8" to move it down very slightly
   );
   incomingSlider.style("width", inputFeed.width - sliderWidth + "px");
 }
 
-function sliderAndTextBeside(incomingSlider, inputFeedX, inputFeedY, string, stringSuffix = "") {
+function textAndSliderLeft(incomingSlider, inputFeedX, inputFeedY, string, stringSuffix = "") {
   // Text (based on inputFeed's dimensions)
   textAlign(RIGHT);
   text(
     // format
     string + ": " + incomingSlider.value() + stringSuffix,
-    inputFeedX - textSize() / 2,
-    inputFeedY + textSize()
+    inputFeedX - incomingSlider.height / 2,
+    inputFeedY + marginHeight / 4
   );
   textAlign(CENTER); // Reset to default
 
   // Slider (based on inputFeed's dimensions)
   incomingSlider.position(
     // format
-    inputFeedX - incomingSlider.width - textSize() / 2,
-    inputFeedY + textSize()
+    inputFeedX - incomingSlider.width - incomingSlider.height / 2,
+    inputFeedY + marginHeight / 4
   );
 }
 
@@ -364,9 +377,9 @@ function setAllEffectsFalse() {
 
 /*
 NOTE
-actual 'capture' is at position (0, 0)
-image() simply draws it at position (margin, margin)
-thus, have to copy from (0, 0) to (0, 0), then simply move the copy using image()
+'capture' is at position (0, 0)
+image(x, y, w, h) "artificially" moves the capture to position (x, y)
+thus, have to copy from (0, 0) to (0, 0), then "artificially" move the copy using image()
 */
 
 // Row 1
@@ -452,7 +465,7 @@ function captureEditB(src, x, y, w, h) {
 }
 
 // Row 3
-function captureEditSegment1(src, x, y, w, h) {
+function captureEditThresholdR(src, x, y, w, h) {
   let captureCopy = createImage(setWidth, setHeight);
   captureCopy.copy(src, 0, 0, setWidth, setHeight, 0, 0, setWidth, setHeight);
   captureCopy.loadPixels();
@@ -460,9 +473,11 @@ function captureEditSegment1(src, x, y, w, h) {
     for (let y = 0; y < captureCopy.height; y++) {
       let index = (captureCopy.width * y + x) * 4;
       let chanR = captureCopy.pixels[index + 0];
-      let chanG = captureCopy.pixels[index + 1];
-      let chanB = captureCopy.pixels[index + 2];
-      captureCopy.pixels[index + 0] = chanR - redRemovedSlider.value();
+      let chanG = 0;
+      let chanB = 0;
+      if (chanR > redThresholdSlider.value()) thresholdToggleIsNowBlack ? (chanR = 0) : (chanR = chanR);
+      else chanR = 255;
+      captureCopy.pixels[index + 0] = chanR;
       captureCopy.pixels[index + 1] = chanG;
       captureCopy.pixels[index + 2] = chanB;
     }
@@ -471,18 +486,20 @@ function captureEditSegment1(src, x, y, w, h) {
   image(captureCopy, x, y, w, h);
 }
 
-function captureEditSegment2(src, x, y, w, h) {
+function captureEditThresholdG(src, x, y, w, h) {
   let captureCopy = createImage(setWidth, setHeight);
   captureCopy.copy(src, 0, 0, setWidth, setHeight, 0, 0, setWidth, setHeight);
   captureCopy.loadPixels();
   for (let x = 0; x < captureCopy.width; x++) {
     for (let y = 0; y < captureCopy.height; y++) {
       let index = (captureCopy.width * y + x) * 4;
-      let chanR = captureCopy.pixels[index + 0];
+      let chanR = 0;
       let chanG = captureCopy.pixels[index + 1];
-      let chanB = captureCopy.pixels[index + 2];
+      let chanB = 0;
+      if (chanG > greenThresholdSlider.value()) thresholdToggleIsNowBlack ? (chanG = 0) : (chanG = chanG);
+      else chanG = 255;
       captureCopy.pixels[index + 0] = chanR;
-      captureCopy.pixels[index + 1] = chanG - greenRemovedSlider.value();
+      captureCopy.pixels[index + 1] = chanG;
       captureCopy.pixels[index + 2] = chanB;
     }
   }
@@ -490,19 +507,21 @@ function captureEditSegment2(src, x, y, w, h) {
   image(captureCopy, x, y, w, h);
 }
 
-function captureEditSegment3(src, x, y, w, h) {
+function captureEditThresholdB(src, x, y, w, h) {
   let captureCopy = createImage(setWidth, setHeight);
   captureCopy.copy(src, 0, 0, setWidth, setHeight, 0, 0, setWidth, setHeight);
   captureCopy.loadPixels();
   for (let x = 0; x < captureCopy.width; x++) {
     for (let y = 0; y < captureCopy.height; y++) {
       let index = (captureCopy.width * y + x) * 4;
-      let chanR = captureCopy.pixels[index + 0];
-      let chanG = captureCopy.pixels[index + 1];
+      let chanR = 0;
+      let chanG = 0;
       let chanB = captureCopy.pixels[index + 2];
+      if (chanB > blueThresholdSlider.value()) thresholdToggleIsNowBlack ? (chanB = 0) : (chanB = chanB);
+      else chanB = 255;
       captureCopy.pixels[index + 0] = chanR;
       captureCopy.pixels[index + 1] = chanG;
-      captureCopy.pixels[index + 2] = chanB - blueRemovedSlider.value();
+      captureCopy.pixels[index + 2] = chanB;
     }
   }
   captureCopy.updatePixels();
