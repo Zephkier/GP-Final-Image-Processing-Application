@@ -1,4 +1,4 @@
-// General variables
+// General
 let capture;
 let setWidth = 160; // This is the minimum, original = 640
 let setHeight = 120; // This is the minimum, original = 480
@@ -7,13 +7,18 @@ let marginHeight = 50; // Recommended minimum = 40
 let positions = []; // positions to end up like this: [ [{x,y}, {x,y}, {x,y}], repeat 4 more times ]
 let hoverToggleButton;
 let hoverEffectIsOn = true;
-let exportButton;
 
-// For picture-taking and resuming video
+// For exporting
+let backgroundColour = 20;
+let exportButton;
+let exportDelaySlider;
+let exportingNow = false;
+let allButtonsAndSliders;
+
+// For (un)freezing frame
 let inputFeed;
-let pictureButton;
-let videoButton;
-let pictureTaken = false; // Simply for adjusting pictureButton's position
+let freezeButton;
+let unfreezeButton;
 
 // For captures
 let brightSlider;
@@ -56,11 +61,9 @@ let detectBlurSlider;
 let detectPixelSlider;
 
 function setup() {
-  // ----- General / Defaults ----- //
+  // ----- General ----- //
   createCanvas(windowWidth, windowHeight);
   textAlign(CENTER);
-  fill(255);
-  noStroke();
 
   pixelDensity(1);
   capture = createCapture(VIDEO);
@@ -74,35 +77,40 @@ function setup() {
     else hoverToggleButton.html("Toggle Cursor Hover:<br>Off");
   });
 
+  // ----- For exporting ----- //
   exportButton = createButton("Export Canvas");
   exportButton.mousePressed(function () {
-    saveCanvas("My p5.js Photo Booth", "png");
+    exportingNow = true;
+    let delay = exportDelaySlider.value() * 1000; // 1000 ms = 1 second
+    setTimeout(function () {
+      saveCanvas("My p5.js Photo Booth", "png");
+      exportingNow = false;
+    }, delay);
   });
 
-  // ----- For picture-taking and resuming video ----- //
+  exportDelaySlider = createSlider(0, 10, 3, 1);
+  exportDelaySlider.style("width", capture.width + "px");
+
+  // ----- For (un)freezing frame ----- //
   // Set inputFeed upon startup
   inputFeed = capture;
 
-  // Button creation
-  pictureButton = createButton("Take picture");
-  videoButton = createButton("Resume video");
-  videoButton.hide();
+  // Button
+  freezeButton = createButton("Freeze frame");
+  unfreezeButton = createButton("Unfreeze frame").hide();
 
-  // Button function (change inputFeed)
-  pictureButton.mousePressed(function () {
+  freezeButton.mousePressed(function () {
     let picture = createImage(capture.width, capture.height);
     picture.copy(capture, 0, 0, capture.width, capture.height, 0, 0, capture.width, capture.height);
     inputFeed = picture;
-    pictureButton.html("Take another!");
-    videoButton.show();
-    pictureTaken = true; // Simply for adjusting pictureButton's position
+    freezeButton.html("Freeze again!");
+    unfreezeButton.show();
   });
 
-  videoButton.mousePressed(function () {
+  unfreezeButton.mousePressed(function () {
     inputFeed = capture;
-    pictureButton.html("Take picture");
-    videoButton.hide();
-    pictureTaken = false; // Simply for adjusting pictureButton's position
+    freezeButton.html("Freeze frame");
+    unfreezeButton.hide();
   });
 
   // ----- For captures ----- //
@@ -139,7 +147,7 @@ function setup() {
   let classifier = objectdetect.frontalface;
   detector = new objectdetect.detector(setWidth, setHeight, scaleFactor, classifier);
 
-  // Button creation
+  // Button
   detectDefaultButton = createButton("Default"); // Tried using a loop to createButton() to simplify; doesn't work
   detectGreyButton = createButton("Greyscale");
   detectBlurButton = createButton("Blur");
@@ -147,7 +155,6 @@ function setup() {
   detectPixelButton = createButton("Pixelate");
   detectNegativeButton = createButton("Negative");
 
-  // Button function (change booleans)
   detectDefaultButton.mousePressed(function () {
     setAllEffectsFalse();
     detectDefaultEffect = true;
@@ -186,10 +193,15 @@ function setup() {
   detectDefaultSlider.style("width", capture.width + "px");
   detectBlurSlider.style("width", capture.width + "px");
   detectPixelSlider.style("width", capture.width + "px");
+
+  // ----- For exporting: update this important array at the end (note that unfreezeButton is not inside) ----- //
+  allButtonsAndSliders = [hoverToggleButton, exportButton, exportDelaySlider, freezeButton, brightSlider, redSlider, greenSlider, blueSlider, redThresholdSlider, greenThresholdSlider, blueThresholdSlider, cyanSlider, magentaSlider, yellowSlider, hueSlider, satSlider, valSlider, thresholdToggleButton, detectDefaultButton, detectGreyButton, detectBlurButton, detectConvertButton, detectPixelButton, detectNegativeButton, detectDefaultSlider, detectBlurSlider, detectPixelSlider];
 }
 
 function draw() {
-  background(20);
+  background(backgroundColour);
+  fill(255);
+  noStroke();
 
   // ----- Update positions in case of window resizing ----- //
   let rowCount = 5;
@@ -198,7 +210,7 @@ function draw() {
     positions[i] = [];
     for (let j = 0; j < colCount; j++) {
       let totalWidth = colCount * (setWidth + marginWidth) - marginWidth;
-      let extraHeight = (detectDefaultSlider.height + detectDefaultSlider.height / 8) * 3; // This is the extra height taken up below captureEditFaceDetect()
+      let extraHeight = exportingNow ? 0 : (detectDefaultSlider.height + detectDefaultSlider.height / 8) * 3; // This is the extra height taken up below captureEditFaceDetect()
       let totalHeight = rowCount * (setHeight + marginHeight) - marginHeight + extraHeight;
       let startX = (width - totalWidth) / 2;
       let startY = (height - totalHeight) / 2;
@@ -209,71 +221,71 @@ function draw() {
     }
   }
 
-  // ----- Buttons at empty space in capture grid ----- //
-  let buttonPosX = positions[0][2].x + inputFeed.width / 2;
+  // ----- At empty space in top-right corner of capture grid ----- //
+  let buttonMargin = exportButton.height / 2;
+  exportButton.position(positions[0][2].x, positions[0][2].y);
+  textAndSliderBottomLeft(exportDelaySlider, inputFeed.width * 0.45, exportButton.x, exportButton.y - inputFeed.height + exportButton.height + buttonMargin, "Export delay\n", " sec");
+  hoverToggleButton.position(exportButton.x, exportDelaySlider.y + buttonMargin * 3.5);
+  freezeButton.position(exportButton.x, hoverToggleButton.y + hoverToggleButton.height + buttonMargin);
+  unfreezeButton.position(exportButton.x + freezeButton.width * 1.15, hoverToggleButton.y + hoverToggleButton.height + buttonMargin);
 
-  if (!pictureTaken) pictureButton.position(buttonPosX - pictureButton.width / 2, positions[0][2].y);
-  else pictureButton.position(buttonPosX - pictureButton.width / 2 - 4, positions[0][2].y); // "- 4" to move it leftwards very slightly due to longer button text
+  // ----- When exporting, hide all HTML elements ----- //
+  for (let i = 0; i < allButtonsAndSliders.length; i++) {
+    exportingNow ? allButtonsAndSliders[i].hide() : allButtonsAndSliders[i].show();
+  }
 
-  videoButton.position(buttonPosX - videoButton.width / 2, pictureButton.y + pictureButton.height + pictureButton.height / 2);
-
-  hoverToggleButton.position(buttonPosX - hoverToggleButton.width / 2, videoButton.y + videoButton.height + videoButton.height / 2);
-
-  exportButton.position(buttonPosX - exportButton.width / 2, hoverToggleButton.y + hoverToggleButton.height + videoButton.height / 2);
-
-  // ----- Capture grid ----- //
-  // ----- Row 1 / 5
+  // ----- Capture grid itself ----- //
+  // Row 1
   image(inputFeed, positions[0][0].x, positions[0][0].y, setWidth, setHeight);
   captureEditGrey(inputFeed, positions[0][1].x, positions[0][1].y, setWidth, setHeight);
-  textAndSliderBottomCenter(brightSlider, positions[0][1].x, positions[0][1].y, "Brightness", "%");
-
-  // ----- Row 2 / 5
+  // Row 2
   captureEditR(inputFeed, positions[1][0].x, positions[1][0].y, setWidth, setHeight);
   captureEditG(inputFeed, positions[1][1].x, positions[1][1].y, setWidth, setHeight);
   captureEditB(inputFeed, positions[1][2].x, positions[1][2].y, setWidth, setHeight);
-  textAndSliderBottomCenter(redSlider, positions[1][0].x, positions[1][0].y, "Red Value");
-  textAndSliderBottomCenter(greenSlider, positions[1][1].x, positions[1][1].y, "Green Value");
-  textAndSliderBottomCenter(blueSlider, positions[1][2].x, positions[1][2].y, "Blue Value");
-
-  // ----- Row 3 / 5
-  thresholdToggleButton.position(positions[2][0].x - thresholdToggleButton.width - thresholdToggleButton.height / 4, positions[2][0].y + inputFeed.height / 2 - thresholdToggleButton.height / 2);
+  // Row 3
   captureEditThresholdR(inputFeed, positions[2][0].x, positions[2][0].y, setWidth, setHeight);
   captureEditThresholdG(inputFeed, positions[2][1].x, positions[2][1].y, setWidth, setHeight);
   captureEditThresholdB(inputFeed, positions[2][2].x, positions[2][2].y, setWidth, setHeight);
-  textAndSliderBottomCenter(redThresholdSlider, positions[2][0].x, positions[2][0].y, "Threshold to turn Red");
-  textAndSliderBottomCenter(greenThresholdSlider, positions[2][1].x, positions[2][1].y, "Threshold to turn Green");
-  textAndSliderBottomCenter(blueThresholdSlider, positions[2][2].x, positions[2][2].y, "Threshold to turn Blue");
-
-  // ----- Row 4 / 5
+  // Row 4
   captureEditRepeat(inputFeed, positions[3][0].x, positions[3][0].y, setWidth, setHeight);
   captureEditColourSpace1(inputFeed, positions[3][1].x, positions[3][1].y, setWidth, setHeight);
   captureEditColourSpace2(inputFeed, positions[3][2].x, positions[3][2].y, setWidth, setHeight);
+  // Row 5
+  captureEditFaceDetect(inputFeed, positions[4][0].x, positions[4][0].y, setWidth, setHeight);
+  captureEditColourSpace1Segment(inputFeed, positions[4][1].x, positions[4][1].y, setWidth, setHeight);
+  captureEditColourSpace2Segment(inputFeed, positions[4][2].x, positions[4][2].y, setWidth, setHeight);
 
-  // ----- Row 5 / 5
+  // ----- Capture grid's buttons and sliders ----- //
+  // Row 1
+  textAndSliderBottomCenter(brightSlider, positions[0][1].x, positions[0][1].y, "Brightness: ", "%");
+  // Row 2
+  textAndSliderBottomCenter(redSlider, positions[1][0].x, positions[1][0].y, "Red Value: ");
+  textAndSliderBottomCenter(greenSlider, positions[1][1].x, positions[1][1].y, "Green Value: ");
+  textAndSliderBottomCenter(blueSlider, positions[1][2].x, positions[1][2].y, "Blue Value: ");
+  // Row 3
+  thresholdToggleButton.position(positions[2][0].x - thresholdToggleButton.width - thresholdToggleButton.height / 4, positions[2][0].y + inputFeed.height / 2 - thresholdToggleButton.height / 2);
+  textAndSliderBottomCenter(redThresholdSlider, positions[2][0].x, positions[2][0].y, "Threshold to turn Red: ");
+  textAndSliderBottomCenter(greenThresholdSlider, positions[2][1].x, positions[2][1].y, "Threshold to turn Green: ");
+  textAndSliderBottomCenter(blueThresholdSlider, positions[2][2].x, positions[2][2].y, "Threshold to turn Blue: ");
+  // Row 5 (row 4 has nothing)
   detectDefaultButton.position(positions[4][0].x - detectDefaultButton.width - detectDefaultButton.height / 4, positions[4][0].y);
   detectGreyButton.position(positions[4][0].x - detectGreyButton.width - detectGreyButton.height / 4, detectDefaultButton.y + detectDefaultButton.height * 1.25);
   detectBlurButton.position(positions[4][0].x - detectBlurButton.width - detectBlurButton.height / 4, detectGreyButton.y + detectGreyButton.height * 1.25);
   detectConvertButton.position(positions[4][0].x - detectConvertButton.width - detectConvertButton.height / 4, detectBlurButton.y + detectBlurButton.height * 1.25);
   detectPixelButton.position(positions[4][0].x - detectPixelButton.width - detectPixelButton.height / 4, detectConvertButton.y + detectConvertButton.height * 1.25);
   detectNegativeButton.position(positions[4][0].x - detectNegativeButton.width - detectNegativeButton.height / 4, detectPixelButton.y + detectPixelButton.height * 1.25);
-  captureEditFaceDetect(inputFeed, positions[4][0].x, positions[4][0].y, setWidth, setHeight);
-  captureEditColourSpace1Segment(inputFeed, positions[4][1].x, positions[4][1].y, setWidth, setHeight);
-  captureEditColourSpace2Segment(inputFeed, positions[4][2].x, positions[4][2].y, setWidth, setHeight);
-
-  // Below capture left
-  textAndSliderBottomLeft(detectDefaultSlider, inputFeed.width * 0.7, positions[4][0].x, positions[4][0].y, "Box thickness", "px");
-  textAndSliderBottomLeft(detectBlurSlider, inputFeed.width * 0.4, positions[4][0].x, positions[4][0].y + detectDefaultSlider.height * 1.2, "Blur", "x");
-  textAndSliderBottomLeft(detectPixelSlider, inputFeed.width * 0.4, positions[4][0].x, positions[4][0].y + detectDefaultSlider.height * 1.2 + detectBlurSlider.height * 1.2, "Pixel", "px");
-
-  // Below capture middle
-  textAndSliderBottomLeft(cyanSlider, inputFeed.width * 0.55, positions[4][1].x, positions[4][1].y, "Cyan", "%");
-  textAndSliderBottomLeft(magentaSlider, inputFeed.width * 0.55, positions[4][1].x, positions[4][1].y + cyanSlider.height * 1.2, "Magenta", "%");
-  textAndSliderBottomLeft(yellowSlider, inputFeed.width * 0.55, positions[4][1].x, positions[4][1].y + cyanSlider.height * 1.2 + magentaSlider.height * 1.2, "Yellow", "%");
-
-  // Below capture right
-  textAndSliderBottomLeft(hueSlider, inputFeed.width * 0.45, positions[4][2].x, positions[4][2].y, "Hue", "°");
-  textAndSliderBottomLeft(satSlider, inputFeed.width * 0.45, positions[4][2].x, positions[4][2].y + hueSlider.height * 1.2, "Sat.", "%");
-  textAndSliderBottomLeft(valSlider, inputFeed.width * 0.45, positions[4][2].x, positions[4][2].y + hueSlider.height * 1.2 + satSlider.height * 1.2, "Value", "%");
+  // Row 5, below capture left
+  textAndSliderBottomLeft(detectDefaultSlider, inputFeed.width * 0.7, positions[4][0].x, positions[4][0].y, "Box thickness: ", "px");
+  textAndSliderBottomLeft(detectBlurSlider, inputFeed.width * 0.4, positions[4][0].x, positions[4][0].y + detectDefaultSlider.height * 1.2, "Blur: ", "x");
+  textAndSliderBottomLeft(detectPixelSlider, inputFeed.width * 0.4, positions[4][0].x, positions[4][0].y + detectDefaultSlider.height * 1.2 + detectBlurSlider.height * 1.2, "Pixel: ", "px");
+  // Row 5, below capture middle
+  textAndSliderBottomLeft(cyanSlider, inputFeed.width * 0.55, positions[4][1].x, positions[4][1].y, "Cyan: ", "%");
+  textAndSliderBottomLeft(magentaSlider, inputFeed.width * 0.55, positions[4][1].x, positions[4][1].y + cyanSlider.height * 1.2, "Magenta: ", "%");
+  textAndSliderBottomLeft(yellowSlider, inputFeed.width * 0.55, positions[4][1].x, positions[4][1].y + cyanSlider.height * 1.2 + magentaSlider.height * 1.2, "Yellow: ", "%");
+  // Row 5, below capture right
+  textAndSliderBottomLeft(hueSlider, inputFeed.width * 0.45, positions[4][2].x, positions[4][2].y, "Hue: ", "°");
+  textAndSliderBottomLeft(satSlider, inputFeed.width * 0.45, positions[4][2].x, positions[4][2].y + hueSlider.height * 1.2, "Sat.: ", "%");
+  textAndSliderBottomLeft(valSlider, inputFeed.width * 0.45, positions[4][2].x, positions[4][2].y + hueSlider.height * 1.2 + satSlider.height * 1.2, "Value: ", "%");
 
   // ----- Capture grid hover effect ----- //
   if (hoverEffectIsOn) {
@@ -324,16 +336,18 @@ function hoverEffect(x, y, w, h, string, linebreakCount) {
   // Text
   let midX = x + w / 2;
   let midY;
-  if (linebreakCount == 0) midY = y + h / 2 + textSize() / 2;
-  else midY = y + h / 2 - (textSize() * linebreakCount) / 2;
+  linebreakCount == 0 ? (midY = y + h / 2 + textSize() / 2) : (midY = y + h / 2 - (textSize() * linebreakCount) / 2);
   text(string, midX, midY);
 }
 
 function textAndSliderBottomCenter(incomingSlider, inputFeedX, inputFeedY, string, stringSuffix = "") {
+  // This is so that it exports without text showing
+  exportingNow ? fill(backgroundColour) : fill(255);
+
   // Text (based on inputFeed's dimensions and incomingSlider's height only)
   text(
     // format
-    string + ": " + incomingSlider.value() + stringSuffix,
+    string + incomingSlider.value() + stringSuffix,
     inputFeedX + inputFeed.width / 2,
     inputFeedY + inputFeed.height + incomingSlider.height
   );
@@ -347,13 +361,19 @@ function textAndSliderBottomCenter(incomingSlider, inputFeedX, inputFeedY, strin
 }
 
 function textAndSliderBottomLeft(incomingSlider, emptySpaceWidth, inputFeedX, inputFeedY, string, stringSuffix = "") {
+  // This is so that it exports without text showing
+  exportingNow ? fill(backgroundColour) : fill(255);
+
+  // Check if input param has "\n", to shift text/slides positions (mainly for "Export delay" text)
+  let hasLineBreak = string.includes("\n");
+
   // Text (based on inputFeed's dimensions and incomingSlider's height only)
   textAlign(LEFT);
   text(
     // format
-    string + ": " + incomingSlider.value() + stringSuffix,
+    string + incomingSlider.value() + stringSuffix,
     inputFeedX,
-    inputFeedY + inputFeed.height + incomingSlider.height
+    hasLineBreak ? inputFeedY + inputFeed.height + incomingSlider.height - textSize() / 2 : inputFeedY + inputFeed.height + incomingSlider.height
   );
   textAlign(CENTER); // Reset to default
 
@@ -364,25 +384,6 @@ function textAndSliderBottomLeft(incomingSlider, emptySpaceWidth, inputFeedX, in
     inputFeedY + inputFeed.height + incomingSlider.height / 8 // "+ incomingSlider.height / 8" to move it down very slightly
   );
   incomingSlider.style("width", inputFeed.width - emptySpaceWidth + "px");
-}
-
-function textAndSliderLeft(incomingSlider, inputFeedX, inputFeedY, string, stringSuffix = "") {
-  // Text (based on inputFeed's dimensions)
-  textAlign(RIGHT);
-  text(
-    // format
-    string + ": " + incomingSlider.value() + stringSuffix,
-    inputFeedX - incomingSlider.height / 2,
-    inputFeedY + marginHeight / 4
-  );
-  textAlign(CENTER); // Reset to default
-
-  // Slider (based on inputFeed's dimensions)
-  incomingSlider.position(
-    // format
-    inputFeedX - incomingSlider.width - incomingSlider.height / 2,
-    inputFeedY + marginHeight / 4
-  );
 }
 
 function setAllEffectsFalse() {
