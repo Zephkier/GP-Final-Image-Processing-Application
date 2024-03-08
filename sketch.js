@@ -39,11 +39,7 @@ let hueSlider;
 let satSlider;
 let valSlider;
 let cyanThresholdSlider;
-let magentaThresholdSlider;
-let yellowThresholdSlider;
 let hueThresholdSlider;
-let satThresholdSlider;
-let valThresholdSlider;
 
 // For threshold
 let thresholdToggleBlackButton;
@@ -152,14 +148,10 @@ function setup() {
   satSlider = createSlider(0, 100, 100, 1);
   valSlider = createSlider(0, 100, 100, 1);
   cyanThresholdSlider = createSlider(0, 100, 66, 1);
-  magentaThresholdSlider = createSlider(0, 100, 66, 1);
-  yellowThresholdSlider = createSlider(0, 100, 66, 1);
   hueThresholdSlider = createSlider(0, 360, 180, 1);
-  satThresholdSlider = createSlider(0, 100, 25, 1);
-  valThresholdSlider = createSlider(0, 100, 50, 1);
 
   let sliders = [];
-  sliders.push(brightSlider, redSlider, greenSlider, blueSlider, redThresholdSlider, greenThresholdSlider, blueThresholdSlider, cyanSlider, magentaSlider, yellowSlider, hueSlider, satSlider, valSlider, cyanThresholdSlider, magentaThresholdSlider, yellowThresholdSlider, hueThresholdSlider, satThresholdSlider, valThresholdSlider);
+  sliders.push(brightSlider, redSlider, greenSlider, blueSlider, redThresholdSlider, greenThresholdSlider, blueThresholdSlider, cyanSlider, magentaSlider, yellowSlider, hueSlider, satSlider, valSlider, cyanThresholdSlider, hueThresholdSlider);
   for (let i = 0; i < sliders.length; i++) {
     sliders[i].style("width", capture.width + "px"); // Set slider's width to be capture's width by default
   }
@@ -232,7 +224,7 @@ function setup() {
   detectPixelSlider.style("width", capture.width + "px");
 
   // ----- For exporting: update this important array at the end (note that unfreezeButton is not inside) ----- //
-  allButtonsAndSliders = [hoverToggleButton, exportButton, exportDelaySlider, freezeButton, unfreezeButton, switchToImageButton, brightSlider, redSlider, greenSlider, blueSlider, redThresholdSlider, greenThresholdSlider, blueThresholdSlider, cyanSlider, magentaSlider, yellowSlider, hueSlider, satSlider, valSlider, cyanThresholdSlider, magentaThresholdSlider, yellowThresholdSlider, hueThresholdSlider, satThresholdSlider, valThresholdSlider, thresholdToggleBlackButton, thresholdToggleWhiteButton, detectDefaultButton, detectGreyButton, detectBlurButton, detectConvertButton, detectPixelButton, detectNegativeButton, detectDefaultSlider, detectBlurSlider, detectPixelSlider];
+  allButtonsAndSliders = [hoverToggleButton, exportButton, exportDelaySlider, freezeButton, unfreezeButton, switchToImageButton, brightSlider, redSlider, greenSlider, blueSlider, redThresholdSlider, greenThresholdSlider, blueThresholdSlider, cyanSlider, magentaSlider, yellowSlider, hueSlider, satSlider, valSlider, cyanThresholdSlider, hueThresholdSlider, thresholdToggleBlackButton, thresholdToggleWhiteButton, detectDefaultButton, detectGreyButton, detectBlurButton, detectConvertButton, detectPixelButton, detectNegativeButton, detectDefaultSlider, detectBlurSlider, detectPixelSlider];
 }
 
 function draw() {
@@ -293,8 +285,8 @@ function draw() {
   captureEditColourSpace2(inputFeed, positions[3][2].x, positions[3][2].y, setWidth, setHeight);
   // Row 5
   captureEditFaceDetect(inputFeed, positions[4][0].x, positions[4][0].y, setWidth, setHeight);
-  captureEditColourSpace1Segment(inputFeed, positions[4][1].x, positions[4][1].y, setWidth, setHeight);
-  captureEditColourSpace2Segment(inputFeed, positions[4][2].x, positions[4][2].y, setWidth, setHeight);
+  captureEditColourSpace1Threshold(inputFeed, positions[4][1].x, positions[4][1].y, setWidth, setHeight);
+  captureEditColourSpace2Threshold(inputFeed, positions[4][2].x, positions[4][2].y, setWidth, setHeight);
 
   // ----- Capture grid's buttons and sliders ----- //
   // Row 1
@@ -330,14 +322,9 @@ function draw() {
   textAndSliderBottomLeft(detectDefaultSlider, inputFeed.width * 0.7, positions[4][0].x, positions[4][0].y, "Box thickness: ", "px");
   textAndSliderBottomLeft(detectBlurSlider, inputFeed.width * 0.4, positions[4][0].x, positions[4][0].y + detectDefaultSlider.height * 1.2, "Blur: ", "x");
   textAndSliderBottomLeft(detectPixelSlider, inputFeed.width * 0.4, positions[4][0].x, positions[4][0].y + detectDefaultSlider.height * 1.2 + detectBlurSlider.height * 1.2, "Pixel: ", "px");
-  // Row 5, below capture middle
-  textAndSliderBottomLeft(cyanThresholdSlider, inputFeed.width * 0.65, positions[4][1].x, positions[4][1].y, "C Threshold: ", "%");
-  textAndSliderBottomLeft(magentaThresholdSlider, inputFeed.width * 0.65, positions[4][1].x, positions[4][1].y + detectDefaultSlider.height * 1.2, "M Threshold: ", "%");
-  textAndSliderBottomLeft(yellowThresholdSlider, inputFeed.width * 0.65, positions[4][1].x, positions[4][1].y + detectDefaultSlider.height * 1.2 + detectBlurSlider.height * 1.2, "Y Threshold: ", "%");
-  // Row 5, below capture right
-  textAndSliderBottomLeft(hueThresholdSlider, inputFeed.width * 0.65, positions[4][2].x, positions[4][2].y, "H Threshold: ", "%");
-  textAndSliderBottomLeft(satThresholdSlider, inputFeed.width * 0.65, positions[4][2].x, positions[4][2].y + detectDefaultSlider.height * 1.2, "S Threshold: ", "%");
-  textAndSliderBottomLeft(valThresholdSlider, inputFeed.width * 0.65, positions[4][2].x, positions[4][2].y + detectDefaultSlider.height * 1.2 + detectBlurSlider.height * 1.2, "V Threshold: ", "%");
+  // Row 5, below capture middle and right
+  textAndSliderBottomCenter(cyanThresholdSlider, positions[4][1].x, positions[4][1].y, "C Threshold: ", "%");
+  textAndSliderBottomCenter(hueThresholdSlider, positions[4][2].x, positions[4][2].y, "H Threshold: ", "%");
 
   // ----- Capture grid hover effect ----- //
   if (hoverEffectIsOn) {
@@ -711,9 +698,6 @@ function fromRGBtoCMY(isRow4, src, currentIndex, incomingR, incomingG, incomingB
     src.pixels[currentIndex + 2] = map(myYellow * (yellowSlider.value() / 100), 0, 1, 255, 0);
   } else {
     myCyan > cyanThresholdSlider.value() / 100 ? (myCyan = 0) : (myCyan = 1);
-    myMagenta > magentaThresholdSlider.value() / 100 ? (myMagenta = 0) : (myMagenta = 1);
-    myYellow > yellowThresholdSlider.value() / 100 ? (myYellow = 0) : (myYellow = 1);
-
     src.pixels[currentIndex + 0] = map(myCyan, 0, 1, 255, 0);
     src.pixels[currentIndex + 1] = map(myMagenta, 0, 1, 255, 0);
     src.pixels[currentIndex + 2] = map(myYellow, 0, 1, 255, 0);
@@ -749,10 +733,7 @@ function fromRGBtoHSV(isRow4, src, currentIndex, incomingR, incomingG, incomingB
     src.pixels[currentIndex + 1] = map(mySat * (satSlider.value() / 100), 0, 1, 0, 255);
     src.pixels[currentIndex + 2] = map(myValMax * (valSlider.value() / 100), 0, 1, 0, 255);
   } else {
-    myHue > hueThresholdSlider.value() ? (myHue = 0) : (myHue = 360);
-    mySat > satThresholdSlider.value() / 100 ? (mySat = 0) : (mySat = 1);
-    myValMax > valThresholdSlider.value() / 100 ? (myValMax = 1) : (myValMax = 0);
-
+    myHue > hueThresholdSlider.value() ? (myHue = 360) : (myHue = 0);
     src.pixels[currentIndex + 0] = map(myHue, 0, 360, 0, 255);
     src.pixels[currentIndex + 1] = map(mySat, 0, 1, 0, 255);
     src.pixels[currentIndex + 2] = map(myValMax, 0, 1, 0, 255);
@@ -784,7 +765,7 @@ function captureEditFaceDetect(src, x, y, w, h) {
   }
 }
 
-function captureEditColourSpace1Segment(src, x, y, w, h) {
+function captureEditColourSpace1Threshold(src, x, y, w, h) {
   let captureCopy = createImage(setWidth, setHeight);
   captureCopy.copy(src, 0, 0, setWidth, setHeight, 0, 0, setWidth, setHeight);
   captureCopy.loadPixels();
@@ -801,7 +782,7 @@ function captureEditColourSpace1Segment(src, x, y, w, h) {
   image(captureCopy, x, y, w, h);
 }
 
-function captureEditColourSpace2Segment(src, x, y, w, h) {
+function captureEditColourSpace2Threshold(src, x, y, w, h) {
   let captureCopy = createImage(setWidth, setHeight);
   captureCopy.copy(src, 0, 0, setWidth, setHeight, 0, 0, setWidth, setHeight);
   captureCopy.loadPixels();
