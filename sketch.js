@@ -1,31 +1,39 @@
-// General
+// ----- General and others ----- //
 let capture;
 let setWidth = 160; // This is the minimum, original = 640
 let setHeight = 120; // This is the minimum, original = 480
 let marginWidth = 20; // Recommended minimum = 20
 let marginHeight = 60; // Recommended minimum = 60 for 1080p screen
+let buttonMargin = 0; // Uses HTML element's value
 let positions = []; // 'positions' to end up like this: [ [{x,y}, {x,y}, {x,y}], repeat 4 more times ]
-let hoverToggleButton;
-let hoverEffectIsOn = true;
-let buttonMargin;
+let buttons = [];
+let sliders = [];
+let buttonsAndSliders = [];
+
+// ----- Canvas' top-right corner's empty space ----- //
 
 // For exporting
-let backgroundColour = 20;
+let backgroundColour;
 let exportButton;
 let exportDelaySlider;
 let exportDelay;
 let exportingNow = false;
-let allButtonsAndSliders;
 
-// For changing inputFeed (aka. (un)freezing frame, using image)
+// Hover effect
+let hoverToggleButton;
+let hoverEffectIsOn = true;
+
+// For changing inputFeed (between capture, frozen capture, and image)
 let inputFeed;
 let freezeButton;
 let unfreezeButton;
-let incomingImage;
 let switchToImageButton;
+let myImage;
 let showUnfreezeButton = false;
 
-// For captures
+// ----- Capture grid ----- //
+
+// Sliders
 let brightSlider;
 let redSlider;
 let greenSlider;
@@ -42,13 +50,13 @@ let valSlider;
 let cyanThresholdSlider;
 let hueThresholdSlider;
 
-// For threshold
+// Buttons
 let thresholdToggleBlackButton;
 let thresholdShowPureBlack = true;
 let thresholdToggleWhiteButton;
 let thresholdToWhite = false;
 
-// For face detection
+// Face detection items
 let detector;
 
 let detectDefaultButton;
@@ -58,178 +66,85 @@ let detectConvertButton;
 let detectPixelButton;
 let detectNegativeButton;
 
-let detectDefaultEffect = true; // Ensure 'Effect' variables are copy-pasted to setAllEffectsFalse()
+let detectDefaultSlider;
+let detectBlurSlider;
+let detectPixelSlider;
+
+// Ensure these are copy-pasted into setAllEffectsFalse()
+let detectDefaultEffect = true;
 let detectGreyEffect = false;
 let detectBlurEffect = false;
 let detectConvertEffect = false;
 let detectPixelEffect = false;
 let detectNegativeEffect = false;
 
-let detectDefaultSlider;
-let detectBlurSlider;
-let detectPixelSlider;
-
 // p5js functions
 function preload() {
-  incomingImage = loadImage("test0.png");
+  myImage = loadImage("test0.png");
 }
 
 function setup() {
-  // ----- General ----- //
+  // General
   createCanvas(windowWidth, windowHeight);
   textAlign(CENTER);
-
   pixelDensity(1);
   capture = createCapture(VIDEO);
   capture.size(setWidth, setHeight);
   capture.hide();
 
-  hoverToggleButton = createButton("Toggle Cursor Hover<br>On"); // Use "<br>" instead of "\n"
-  hoverToggleButton.mousePressed(function () {
-    hoverEffectIsOn = !hoverEffectIsOn;
-    if (hoverEffectIsOn) hoverToggleButton.html("Toggle Cursor Hover<br>On");
-    else hoverToggleButton.html("Toggle Cursor Hover<br>Off");
-  });
-
-  // ----- For exporting ----- //
-  exportButton = createButton("Export Canvas");
-  exportButton.mousePressed(function () {
-    exportDelay = exportDelaySlider.value() * 1000; // 1000 = 1 second
-    exportingNow = true;
-    setTimeout(function () {
-      saveCanvas("My p5.js Photo Booth", "png");
-      exportingNow = false;
-    }, exportDelay);
-  });
-
-  exportDelaySlider = createSlider(0, 10, 3, 1);
-  exportDelaySlider.style("width", capture.width + "px");
-
-  // ----- For (un)freezing frame ----- //
-  // Set inputFeed upon startup
-  inputFeed = capture;
-
-  // Button
-  freezeButton = createButton("Freeze frame");
-  unfreezeButton = createButton("Unfreeze frame").hide();
-  switchToImageButton = createButton("Switch to<br>Preloaded Image");
-
-  freezeButton.mousePressed(function () {
-    let picture = createImage(capture.width, capture.height);
-    picture.copy(capture, 0, 0, capture.width, capture.height, 0, 0, capture.width, capture.height);
-    inputFeed = picture;
-    freezeButton.html("Freeze again!");
-    showUnfreezeButton = true;
-  });
-
-  unfreezeButton.mousePressed(function () {
-    inputFeed = capture;
-    freezeButton.html("Freeze frame");
-    showUnfreezeButton = false;
-  });
-
-  switchToImageButton.mousePressed(function () {
-    let incomingImageCopy = createImage(capture.width, capture.height);
-    incomingImageCopy.copy(incomingImage, 0, 0, incomingImage.width, incomingImage.height, 0, 0, capture.width, capture.height);
-    inputFeed = incomingImageCopy;
-    showUnfreezeButton = true;
-  });
-
-  // ----- For captures ----- //
-  brightSlider = createSlider(0, 300, 120, 1);
-  redSlider = createSlider(0, 255, 255, 1);
-  greenSlider = createSlider(0, 255, 255, 1);
-  blueSlider = createSlider(0, 255, 255, 1);
-  redThresholdSlider = createSlider(0, 255, 85, 1); // 85 = (1 / 3) of 255
-  greenThresholdSlider = createSlider(0, 255, 85, 1); // 85 = (1 / 3) of 255
-  blueThresholdSlider = createSlider(0, 255, 85, 1); // 85 = (1 / 3) of 255
-  cyanSlider = createSlider(0, 100, 100, 1);
-  magentaSlider = createSlider(0, 100, 100, 1);
-  yellowSlider = createSlider(0, 100, 100, 1);
-  hueSlider = createSlider(0, 360, 360, 1);
-  satSlider = createSlider(0, 100, 100, 1);
-  valSlider = createSlider(0, 100, 100, 1);
-  cyanThresholdSlider = createSlider(0, 100, 66, 1);
-  hueThresholdSlider = createSlider(0, 360, 180, 1);
-
-  let sliders = [];
-  sliders.push(brightSlider, redSlider, greenSlider, blueSlider, redThresholdSlider, greenThresholdSlider, blueThresholdSlider, cyanSlider, magentaSlider, yellowSlider, hueSlider, satSlider, valSlider, cyanThresholdSlider, hueThresholdSlider);
-  for (let i = 0; i < sliders.length; i++) {
-    sliders[i].style("width", capture.width + "px"); // Set slider's width to be capture's width by default
-  }
-
-  // ----- For threshold ----- //
-  thresholdToggleBlackButton = createButton("See Pure Black<br>On"); // Use "<br>" instead of "\n"
-  thresholdToggleBlackButton.mousePressed(function () {
-    thresholdShowPureBlack = !thresholdShowPureBlack;
-    if (thresholdShowPureBlack) thresholdToggleBlackButton.html("See Pure Black<br>On");
-    else thresholdToggleBlackButton.html("See Pure Black<br>Off");
-  });
-
-  thresholdToggleWhiteButton = createButton("Threshold to White<br>Off"); // Use "<br>" instead of "\n"
-  thresholdToggleWhiteButton.mousePressed(function () {
-    thresholdToWhite = !thresholdToWhite;
-    if (thresholdToWhite) thresholdToggleWhiteButton.html("Threshold to White<br>On");
-    else thresholdToggleWhiteButton.html("Threshold to White<br>Off");
-  });
-
-  // ----- For face detection ----- //
+  // Face detection
   let scaleFactor = 1.2;
   let classifier = objectdetect.frontalface;
   detector = new objectdetect.detector(setWidth, setHeight, scaleFactor, classifier);
 
-  // Button
-  detectDefaultButton = createButton("Default"); // Tried using a loop to createButton() to simplify; doesn't work
-  detectGreyButton = createButton("Greyscale");
-  detectBlurButton = createButton("Blur");
-  detectConvertButton = createButton("HSV Mode");
-  detectPixelButton = createButton("Pixelate");
-  detectNegativeButton = createButton("Negative");
+  // Canvas' top-right corner's empty space
+  inputFeed = capture;
+  setupTopRightCornerItems();
 
-  detectDefaultButton.mousePressed(function () {
-    setAllEffectsFalse();
-    detectDefaultEffect = true;
-  });
+  // At capture grid
+  setupCaptureGridButtons();
+  setupCaptureGridSliders();
 
-  detectGreyButton.mousePressed(function () {
-    setAllEffectsFalse();
-    detectGreyEffect = true;
-  });
-
-  detectBlurButton.mousePressed(function () {
-    setAllEffectsFalse();
-    detectBlurEffect = true;
-  });
-
-  detectConvertButton.mousePressed(function () {
-    setAllEffectsFalse();
-    detectConvertEffect = true;
-  });
-
-  detectPixelButton.mousePressed(function () {
-    setAllEffectsFalse();
-    detectPixelEffect = true;
-  });
-
-  detectNegativeButton.mousePressed(function () {
-    setAllEffectsFalse();
-    detectNegativeEffect = true;
-  });
-
-  // Slider
-  detectDefaultSlider = createSlider(1, 10, 2, 1);
-  detectBlurSlider = createSlider(1, 30, 15, 1);
-  detectPixelSlider = createSlider(1, 20, 10, 1);
-
-  detectDefaultSlider.style("width", capture.width + "px");
-  detectBlurSlider.style("width", capture.width + "px");
-  detectPixelSlider.style("width", capture.width + "px");
-
-  // ----- For exporting: update this important array at the end (note that unfreezeButton is not inside) ----- //
-  allButtonsAndSliders = [hoverToggleButton, exportButton, exportDelaySlider, freezeButton, unfreezeButton, switchToImageButton, brightSlider, redSlider, greenSlider, blueSlider, redThresholdSlider, greenThresholdSlider, blueThresholdSlider, cyanSlider, magentaSlider, yellowSlider, hueSlider, satSlider, valSlider, cyanThresholdSlider, hueThresholdSlider, thresholdToggleBlackButton, thresholdToggleWhiteButton, detectDefaultButton, detectGreyButton, detectBlurButton, detectConvertButton, detectPixelButton, detectNegativeButton, detectDefaultSlider, detectBlurSlider, detectPixelSlider];
+  // For exporting, to hide all HTML elements (note 'unfreezeButton' is not inside)
+  // buttonsAndSliders = [
+  //   // Format
+  //   hoverToggleButton,
+  //   exportButton,
+  //   exportDelaySlider,
+  //   freezeButton,
+  //   unfreezeButton,
+  //   switchToImageButton,
+  //   brightSlider,
+  //   redSlider,
+  //   greenSlider,
+  //   blueSlider,
+  //   redThresholdSlider,
+  //   greenThresholdSlider,
+  //   blueThresholdSlider,
+  //   cyanSlider,
+  //   magentaSlider,
+  //   yellowSlider,
+  //   hueSlider,
+  //   satSlider,
+  //   valSlider,
+  //   cyanThresholdSlider,
+  //   hueThresholdSlider,
+  //   thresholdToggleBlackButton,
+  //   thresholdToggleWhiteButton,
+  //   detectDefaultButton,
+  //   detectGreyButton,
+  //   detectBlurButton,
+  //   detectConvertButton,
+  //   detectPixelButton,
+  //   detectNegativeButton,
+  //   detectDefaultSlider,
+  //   detectBlurSlider,
+  //   detectPixelSlider,
+  // ];
 }
 
 function draw() {
+  backgroundColour = 20;
   background(backgroundColour);
   fill(255);
   noStroke();
@@ -237,9 +152,9 @@ function draw() {
   // Update positions in case of window resizing
   getCaptureGridPosition();
 
-  // At canvas' top-right corner's empty space
+  // Canvas' top-right corner's empty space
   buttonMargin = exportButton.height / 2;
-  setTopRightCornerItems();
+  drawTopRightCornerItems();
 
   // Capture grid stuff
   drawCaptureGrid();
@@ -295,6 +210,191 @@ function setAllEffectsFalse() {
   detectNegativeEffect = false;
 }
 
+function setupTopRightCornerItems() {
+  setupExportItems();
+  setupHoverToggleButton();
+  setupInputFeedItems();
+}
+
+function setupExportItems() {
+  exportButton = createButton("Export Canvas");
+  buttons.push(exportButton);
+
+  exportButton.mousePressed(function () {
+    exportDelay = exportDelaySlider.value() * 1000; // 1000 = 1 second
+    exportingNow = true;
+    setTimeout(function () {
+      saveCanvas("My p5.js Photo Booth", "png");
+      exportingNow = false;
+    }, exportDelay);
+  });
+
+  exportDelaySlider = createSlider(0, 10, 3, 1);
+  sliders.push(exportDelaySlider);
+}
+
+function setupHoverToggleButton() {
+  hoverToggleButton = createButton("Toggle Cursor Hover<br>On"); // Use "<br>" instead of "\n"
+  buttons.push(hoverToggleButton);
+
+  hoverToggleButton.mousePressed(function () {
+    hoverEffectIsOn = !hoverEffectIsOn;
+    if (hoverEffectIsOn) hoverToggleButton.html("Toggle Cursor Hover<br>On");
+    else hoverToggleButton.html("Toggle Cursor Hover<br>Off");
+  });
+}
+
+function setupInputFeedItems() {
+  freezeButton = createButton("Freeze frame");
+  unfreezeButton = createButton("Unfreeze frame").hide();
+  switchToImageButton = createButton("Switch to<br>Preloaded Image");
+  buttons.push(
+    // Format
+    freezeButton,
+    unfreezeButton, // TEST
+    switchToImageButton
+  );
+
+  freezeButton.mousePressed(function () {
+    let picture = createImage(capture.width, capture.height);
+    picture.copy(capture, 0, 0, capture.width, capture.height, 0, 0, capture.width, capture.height);
+    inputFeed = picture;
+    freezeButton.html("Freeze again!");
+    showUnfreezeButton = true;
+  });
+
+  unfreezeButton.mousePressed(function () {
+    inputFeed = capture;
+    freezeButton.html("Freeze frame");
+    showUnfreezeButton = false;
+  });
+
+  switchToImageButton.mousePressed(function () {
+    let myImageCopy = createImage(capture.width, capture.height);
+    myImageCopy.copy(myImage, 0, 0, myImage.width, myImage.height, 0, 0, capture.width, capture.height);
+    inputFeed = myImageCopy;
+    showUnfreezeButton = true;
+  });
+}
+
+function setupCaptureGridButtons() {
+  // Row 3
+  thresholdToggleBlackButton = createButton("See Pure Black<br>On"); // Use "<br>" instead of "\n"
+  thresholdToggleBlackButton.mousePressed(function () {
+    thresholdShowPureBlack = !thresholdShowPureBlack;
+    if (thresholdShowPureBlack) thresholdToggleBlackButton.html("See Pure Black<br>On");
+    else thresholdToggleBlackButton.html("See Pure Black<br>Off");
+  });
+
+  thresholdToggleWhiteButton = createButton("Threshold to White<br>Off"); // Use "<br>" instead of "\n"
+  thresholdToggleWhiteButton.mousePressed(function () {
+    thresholdToWhite = !thresholdToWhite;
+    if (thresholdToWhite) thresholdToggleWhiteButton.html("Threshold to White<br>On");
+    else thresholdToggleWhiteButton.html("Threshold to White<br>Off");
+  });
+
+  // Face detection
+  detectDefaultButton = createButton("Default");
+  detectGreyButton = createButton("Greyscale");
+  detectBlurButton = createButton("Blur");
+  detectConvertButton = createButton("HSV Mode");
+  detectPixelButton = createButton("Pixelate");
+  detectNegativeButton = createButton("Negative");
+
+  detectDefaultButton.mousePressed(function () {
+    setAllEffectsFalse();
+    detectDefaultEffect = true;
+  });
+
+  detectGreyButton.mousePressed(function () {
+    setAllEffectsFalse();
+    detectGreyEffect = true;
+  });
+
+  detectBlurButton.mousePressed(function () {
+    setAllEffectsFalse();
+    detectBlurEffect = true;
+  });
+
+  detectConvertButton.mousePressed(function () {
+    setAllEffectsFalse();
+    detectConvertEffect = true;
+  });
+
+  detectPixelButton.mousePressed(function () {
+    setAllEffectsFalse();
+    detectPixelEffect = true;
+  });
+
+  detectNegativeButton.mousePressed(function () {
+    setAllEffectsFalse();
+    detectNegativeEffect = true;
+  });
+
+  buttons.push(
+    // Format
+    thresholdToggleBlackButton,
+    thresholdToggleWhiteButton,
+    detectDefaultButton,
+    detectGreyButton,
+    detectBlurButton,
+    detectConvertButton,
+    detectPixelButton,
+    detectNegativeButton
+  );
+}
+
+function setupCaptureGridSliders() {
+  // Non-face detection
+  brightSlider = createSlider(0, 300, 120, 1);
+  redSlider = createSlider(0, 255, 255, 1);
+  greenSlider = createSlider(0, 255, 255, 1);
+  blueSlider = createSlider(0, 255, 255, 1);
+  redThresholdSlider = createSlider(0, 255, 85, 1); // 85 = (1 / 3) of 255
+  greenThresholdSlider = createSlider(0, 255, 85, 1); // 85 = (1 / 3) of 255
+  blueThresholdSlider = createSlider(0, 255, 85, 1); // 85 = (1 / 3) of 255
+  cyanSlider = createSlider(0, 100, 100, 1);
+  magentaSlider = createSlider(0, 100, 100, 1);
+  yellowSlider = createSlider(0, 100, 100, 1);
+  hueSlider = createSlider(0, 360, 360, 1);
+  satSlider = createSlider(0, 100, 100, 1);
+  valSlider = createSlider(0, 100, 100, 1);
+  cyanThresholdSlider = createSlider(0, 100, 66, 1);
+  hueThresholdSlider = createSlider(0, 360, 180, 1);
+
+  // Face detection
+  detectDefaultSlider = createSlider(1, 10, 2, 1);
+  detectBlurSlider = createSlider(1, 30, 15, 1);
+  detectPixelSlider = createSlider(1, 20, 10, 1);
+
+  // Set slider's width to capture's width by default
+  sliders.push(
+    // Format
+    brightSlider,
+    redSlider,
+    greenSlider,
+    blueSlider,
+    redThresholdSlider,
+    greenThresholdSlider,
+    blueThresholdSlider,
+    cyanSlider,
+    magentaSlider,
+    yellowSlider,
+    hueSlider,
+    satSlider,
+    valSlider,
+    cyanThresholdSlider,
+    hueThresholdSlider,
+    detectDefaultSlider,
+    detectBlurSlider,
+    detectPixelSlider
+  );
+
+  for (let i = 0; i < sliders.length; i++) {
+    sliders[i].style("width", capture.width + "px");
+  }
+}
+
 // draw() helper functions
 function getCaptureGridPosition() {
   let rowCount = 5;
@@ -315,7 +415,7 @@ function getCaptureGridPosition() {
   }
 }
 
-function setTopRightCornerItems() {
+function drawTopRightCornerItems() {
   // Set positions
   exportButton.position(positions[0][2].x, positions[0][2].y);
   textAndSliderBottomLeft(exportDelaySlider, inputFeed.width * 0.45, exportButton.x, exportButton.y - inputFeed.height + exportButton.height + buttonMargin, "Export delay\n", " sec");
@@ -325,11 +425,11 @@ function setTopRightCornerItems() {
   unfreezeButton.position(exportButton.x + freezeButton.width + buttonMargin, hoverToggleButton.y + hoverToggleButton.height + buttonMargin);
 
   // When exporting, hide all HTML elements
-  for (let i = 0; i < allButtonsAndSliders.length; i++) {
-    exportingNow ? allButtonsAndSliders[i].hide() : allButtonsAndSliders[i].show();
+  for (let i = 0; i < buttonsAndSliders.length; i++) {
+    exportingNow ? buttonsAndSliders[i].hide() : buttonsAndSliders[i].show();
   }
 
-  // Must be after 'for' loop above
+  // Only 'unfreezeButton' need not show (this line must be after 'for' loop above)
   showUnfreezeButton && !exportingNow ? unfreezeButton.show() : unfreezeButton.hide();
 }
 
