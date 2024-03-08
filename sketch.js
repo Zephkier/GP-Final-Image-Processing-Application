@@ -829,9 +829,9 @@ function fromRGBtoHSV(isRow4, src, currentIndex, incomingR, incomingG, incomingB
 
   // Hue
   let myHue;
-  if (myValMax == incomingR) myHue = 60 * ((0 + (incomingG - incomingB)) / (myValMax - myValMin));
-  if (myValMax == incomingG) myHue = 60 * ((2 + (incomingB - incomingR)) / (myValMax - myValMin));
-  if (myValMax == incomingB) myHue = 60 * ((4 + (incomingR - incomingG)) / (myValMax - myValMin));
+  if (myValMax == incomingR) myHue = 60 * (0 + (incomingG - incomingB) / (myValMax - myValMin));
+  if (myValMax == incomingG) myHue = 60 * (2 + (incomingB - incomingR) / (myValMax - myValMin));
+  if (myValMax == incomingB) myHue = 60 * (4 + (incomingR - incomingG) / (myValMax - myValMin));
   if (myHue < 0) myHue += 360;
 
   // Change output and reset range back to 0~255
