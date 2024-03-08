@@ -4,7 +4,7 @@ let setWidth = 160; // This is the minimum, original = 640
 let setHeight = 120; // This is the minimum, original = 480
 let marginWidth = 20; // Recommended minimum = 20
 let marginHeight = 60; // Recommended minimum = 60 for 1080p screen
-let positions = []; // positions to end up like this: [ [{x,y}, {x,y}, {x,y}], repeat 4 more times ]
+let positions = []; // 'positions' to end up like this: [ [{x,y}, {x,y}, {x,y}], repeat 4 more times ]
 let hoverToggleButton;
 let hoverEffectIsOn = true;
 
@@ -12,10 +12,11 @@ let hoverEffectIsOn = true;
 let backgroundColour = 20;
 let exportButton;
 let exportDelaySlider;
+let exportDelay;
 let exportingNow = false;
 let allButtonsAndSliders;
 
-// For chaning inputFeed (aka. (un)freezing frame, using image)
+// For changing inputFeed (aka. (un)freezing frame, using image)
 let inputFeed;
 let freezeButton;
 let unfreezeButton;
@@ -95,12 +96,12 @@ function setup() {
   // ----- For exporting ----- //
   exportButton = createButton("Export Canvas");
   exportButton.mousePressed(function () {
+    exportDelay = exportDelaySlider.value() * 1000; // 1000 = 1 second
     exportingNow = true;
-    let delay = exportDelaySlider.value() * 1000; // 1000 ms = 1 second
     setTimeout(function () {
       saveCanvas("My p5.js Photo Booth", "png");
       exportingNow = false;
-    }, delay);
+    }, exportDelay);
   });
 
   exportDelaySlider = createSlider(0, 10, 3, 1);
