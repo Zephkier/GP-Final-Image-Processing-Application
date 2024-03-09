@@ -1,3 +1,93 @@
+/*
+GP Final - Submission Commentary Report
+497 out of 500 words
+
+=========================
+(98 words) What problems have you faced and were you able to solve them?
+=========================
+Initially, due to a lack of understanding in using captures, the 'image()' function, and
+moving copies around, I spent a lot of time doing trial and error to grasp a better
+concept - and got better over time.
+
+The next hurdle was tackling the application’s presentation, and the capture’s
+repetitive code.
+
+As there are 14 different captures, I needed a simpler way to reference each of their
+positions, which led to the creation of the 2-Dimensional 'positions' array.
+
+Then, I needed a standardised way to create all of the captures, which led to the
+creation of the 'captureEdit...()' function.
+
+=========================
+(44 words) Were you on target to successfully complete your project? If not, how would
+you address the issue/s and do things differently?
+=========================
+Along the process, I created helper functions, such as easily drawing text and sliders
+before the capture, to improve productivity.
+
+With that, apart from researching colour space conversion formulas and some of the face
+detection effects, I was on target to finish the project.
+
+=========================
+(83 words) Also discuss your extension and why it is a unique idea.
+=========================
+Once every capture and their effects were successfully implemented, I worked on some
+extensions, specifically, the canvas' top-right corner.
+
+This includes:
+- Saving the entire canvas with an adjustable timer.
+- Creating a hover effect over each capture.
+- Changing the capture’s input via a freeze frame or preloaded image.
+
+My unique method of saving the canvas includes decluttering the screen of any text and
+HTML elements, and centralising the overall captures. Additionally, the hover effect is
+great as it informs the user regarding each capture.
+
+=========================
+(272 words) Discuss your findings e.g. image thresholding using each colour channel
+=========================
+8. What can you say about the result of thresholding for each channel - is it different
+and why?
+-------------------------
+Yes, thresholding each channel gives different outputs. To explain clearly, say there is
+a pixel with RGB(200, 100, 50) values.
+
+Like in row 2 of my application, when converting that pixel to show the red channel only,
+it becomes RGB(200, 0, 0). Likewise, for the blue-only and green-only captures, it
+becomes RGB(0, 100, 0) and RGB(0, 0, 50) respectively.
+
+The threshold causes the pixel value to either become black, RGB(0), or its brightest
+colour in the corresponding capture it belongs to; if red-only, then RGB(255, 0, 0).
+
+Thus, when applying a threshold value of, say 150, the pixel in the red-only capture
+becomes RGB(0), while the same pixel in the blue-only and green-only captures remain the
+same - and that is when the differences start to show.
+
+-------------------------
+11. What can you say about the thresholding results above when compared to step 7
+i.e. is the thresholded image noisier etc? Can you use a different colour space to
+improve results?
+-------------------------
+The thresholding concept remains the same in both my CMY and HSV captures.
+
+In the CMY colour space, as I change the threshold’s value, the effects are very similar
+to the RGB colour space.
+
+However, in the HSV colour space, both the original image and thresholded image are much
+noisier. This could be due to how HSV’s colour calculations are conceptually and entirely
+different from both RGB and CMY. For example, HSV uses angles to select hues, while RGB
+and CMY simply adjusts all of its channels to select hues.
+
+This means that the current thresholding method used in the HSV colour space is
+inappropriate, while the same thresholding method for the RGB and CMY colour spaces are
+fine.
+
+Finally, a different colour space can indeed be used, such as CMY. Both colour spaces are
+demonstrated in my application.
+
+-------------------------
+*/
+
 // ----- General and others ----- //
 
 let capture;
